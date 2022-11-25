@@ -110,6 +110,15 @@ public class OfflineAccountSkinPane extends StackPane {
                 new MultiFileItem.Option<>(i18n("message.default"), Skin.Type.DEFAULT),
                 new MultiFileItem.Option<>("Steve", Skin.Type.STEVE),
                 new MultiFileItem.Option<>("Alex", Skin.Type.ALEX),
+                new MultiFileItem.Option<>("Steve(new)", Skin.Type.STEVENEW),
+                new MultiFileItem.Option<>("Alex(new)", Skin.Type.ALEXNEW),
+                new MultiFileItem.Option<>("Ari", Skin.Type.ARI),
+                new MultiFileItem.Option<>("Efe", Skin.Type.EFE),
+                new MultiFileItem.Option<>("Kai", Skin.Type.KAI),
+                new MultiFileItem.Option<>("Makena", Skin.Type.MAKENA),
+                new MultiFileItem.Option<>("Noor", Skin.Type.NOOR),
+                new MultiFileItem.Option<>("Sunny", Skin.Type.SUNNY),
+                new MultiFileItem.Option<>("Zuri", Skin.Type.ZURI),
                 new MultiFileItem.Option<>(i18n("account.skin.type.local_file"), Skin.Type.LOCAL_FILE),
                 new MultiFileItem.Option<>("LittleSkin", Skin.Type.LITTLE_SKIN),
                 new MultiFileItem.Option<>(i18n("account.skin.type.csl_api"), Skin.Type.CUSTOM_SKIN_LOADER_API)
@@ -159,6 +168,15 @@ public class OfflineAccountSkinPane extends StackPane {
                 case DEFAULT:
                 case STEVE:
                 case ALEX:
+                case STEVENEW:
+                case ALEXNEW:
+                case ARI:
+                case EFE:
+                case KAI:
+                case MAKENA:
+                case NOOR:
+                case SUNNY:
+                case ZURI:
                     break;
                 case LITTLE_SKIN:
                     HintPane hint = new HintPane(MessageDialogPane.MessageType.INFO);
