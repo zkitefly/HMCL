@@ -44,7 +44,7 @@ public final class CrashReportAnalyzer {
 
         // Maybe software rendering? Suggest user for using a graphics card.
         OPENGL_NOT_SUPPORTED(Pattern.compile("The driver does not appear to support OpenGL")),
-        GRAPHICS_DRIVER(Pattern.compile("(Pixel format not accelerated|GLX: Failed to create context: GLXBadFBConfig|Couldn't set pixel format|net\\.minecraftforge\\.fml.client\\.SplashProgress|org\\.lwjgl\\.LWJGLException|EXCEPTION_ACCESS_VIOLATION(.|\\n|\\r)+# C {2}\\[(ig|atio|nvoglv))")),
+        GRAPHICS_DRIVER(Pattern.compile("(OpenGL API ERROR: 1285|Pixel format not accelerated|GLX: Failed to create context: GLXBadFBConfig|Couldn't set pixel format|net\\.minecraftforge\\.fml.client\\.SplashProgress|org\\.lwjgl\\.LWJGLException|EXCEPTION_ACCESS_VIOLATION(.|\\n|\\r)+# C {2}\\[(ig|atio|nvoglv))")),
         // Out of memory
         OUT_OF_MEMORY(Pattern.compile("(java\\.lang\\.OutOfMemoryError|The system is out of physical RAM or swap space)")),
         // Memory exceeded
@@ -52,7 +52,7 @@ public final class CrashReportAnalyzer {
         // Too high resolution
         RESOLUTION_TOO_HIGH(Pattern.compile("Maybe try a (lower resolution|lowerresolution) (resourcepack|texturepack)\\?")),
         // game can only run on Java 8. Version of uesr's JVM is too high.
-        JDK_9(Pattern.compile("java\\.lang\\.ClassCastException: (java\\.base/jdk|class jdk)")),
+        JDK_9(Pattern.compile("java\\.lang\\.ClassCastException: (java\\.base/jdk|class jdk|Error loading class: java/lang/Boolean (java\\.lang\\.IllegalArgumentException: Unsupported class file major version 63|cannot access class sun\\.security\\.util\\.ManifestEntryVerifier (in module java\\.base) because module java\\.base does not export sun\\.security\\.util to unnamed module))")), // https://github.com/huanghongxun/HMCL/discussions/1904#discussioncomment-4332230 https://github.com/huanghongxun/HMCL/discussions/1904#discussioncomment-4332422
         // Forge and OptiFine with crash because the JVM compiled with a new version of Xcode
         // https://github.com/sp614x/optifine/issues/4824
         // https://github.com/MinecraftForge/MinecraftForge/issues/7546
@@ -100,10 +100,13 @@ public final class CrashReportAnalyzer {
         // Cannot find native libraries
         UNSATISFIED_LINK_ERROR(Pattern.compile("java.lang.UnsatisfiedLinkError: Failed to locate library: (?<name>.*)"), "name"),
         //https://github.com/huanghongxun/HMCL/pull/1813
-        //OPTIFINE_IS_NOT_COMPATIBLE_WITH_FORGE(Pattern.compile("(Cannot read field \"ofTelemetry\" because \"net\\.optifine\\.Config\\.gameSettings\" is null|TRANSFORMER/net\\.optifine/net\\.optifine\\.reflect\\.Reflector\\.<clinit>\\(Reflector\\.java \\)")),
-        MOD_FILES_ARE_DECOMPRESSED(Pattern.compile("(The directories below appear to be extracted jar files\\. Fix this before you continue|Extracted mod jars found, loading will NOT continue)")),//Mod文件被解压
-        OPTIFINE_CAUSES_THE_WORLD_TO_FAIL_TO_LOAD(Pattern.compile("java\\.lang\\.NoSuchMethodError: net\\.minecraft\\.world\\.server\\.ChunkManager$ProxyTicketManager\\.shouldForceTicks\\(J\\)Z\\+OptiFine")),//OptiFine导致无法加载世界 https://www.minecraftforum.net/forums/support/java-edition-support/3051132-exception-ticking-world
+        OPTIFINE_IS_NOT_COMPATIBLE_WITH_FORGE(Pattern.compile("(Cannot read field \"ofTelemetry\" because \"net\\.optifine\\.Config\\.gameSettings\" is null|TRANSFORMER/net\\.optifine/net\\.optifine\\.reflect\\.Reflector\\.<clinit>\\(Reflector\\.java \\|java\\.lang\\.NoSuchMethodError: 'void net\\.minecraft\\.client\\.renderer\\.block\\.model\\.BakedQuad\\.<init>(int[], int, net\\.minecraft\\.core\\.Direction, net\\.minecraft\\.client\\.renderer\\.texture\\.TextureAtlasSprite, boolean, boolean)')")), //https://github.com/huanghongxun/HMCL/discussions/1904#discussioncomment-4332485
+        MOD_FILES_ARE_DECOMPRESSED(Pattern.compile("(The directories below appear to be extracted jar files\\. Fix this before you continue|Extracted mod jars found, loading will NOT continue)")),// Mod文件被解压
+        OPTIFINE_CAUSES_THE_WORLD_TO_FAIL_TO_LOAD(Pattern.compile("java\\.lang\\.NoSuchMethodError: net\\.minecraft\\.world\\.server\\.ChunkManager$ProxyTicketManager\\.shouldForceTicks\\(J\\)Z\\+OptiFine")),// OptiFine导致无法加载世界 https://www.minecraftforum.net/forums/support/java-edition-support/3051132-exception-ticking-world
         TOO_MANY_MODS_LEAD_TO_EXCEEDING_THE_ID_LIMIT(Pattern.compile("maximum id range exceeded")),//Mod过多导致超出ID限制
+        //github pull link
+        JAVA_VERSION_IS_TOO_HIGH(Pattern.compile("Unrecognized option: -p")), // https://github.com/huanghongxun/HMCL/discussions/1904#discussioncomment-4332203
+        ID(Pattern.compile("Exception in thread \"main\"")), // 在 forge 1.13+ 下把游戏目录选为磁盘根目录 https://github.com/huanghongxun/HMCL/discussions/1904#discussioncomment-4332361
 
         // Mod issues
         // TwilightForest is not compatible with OptiFine on Minecraft 1.16.
