@@ -64,11 +64,11 @@ public class UpgradeDialog extends JFXDialogLayout {
         {
             JFXButton updateButton = new JFXButton(i18n("update.accept"));
             updateButton.getStyleClass().add("dialog-accept");
-            updateButton.setOnMouseClicked(e -> updateRunnable.run());
+            updateButton.setOnAction(e -> updateRunnable.run());
 
             JFXButton cancelButton = new JFXButton(i18n("button.cancel"));
             cancelButton.getStyleClass().add("dialog-cancel");
-            cancelButton.setOnMouseClicked(e -> fireEvent(new DialogCloseEvent()));
+            cancelButton.setOnAction(e -> fireEvent(new DialogCloseEvent()));
 
             setActions(updateButton, cancelButton);
             onEscPressed(this, cancelButton::fire);

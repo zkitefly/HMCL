@@ -379,7 +379,7 @@ public class DownloadListPage extends Control implements DecoratorPage, VersionP
                 JFXListView<RemoteMod> listView = new JFXListView<>();
                 spinnerPane.setContent(listView);
                 Bindings.bindContent(listView.getItems(), getSkinnable().items);
-                listView.setOnMouseClicked(e -> {
+                listView.setOnAction(e -> {
                     if (listView.getSelectionModel().getSelectedIndex() < 0)
                         return;
                     RemoteMod selectedItem = listView.getSelectionModel().getSelectedItem();

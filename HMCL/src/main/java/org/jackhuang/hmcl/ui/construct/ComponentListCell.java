@@ -182,7 +182,7 @@ final class ComponentListCell extends StackPane {
                 });
             };
 
-            headerRippler.setOnMouseClicked(onExpand);
+            headerRippler.setOnAction(onExpand);
             expandButton.setOnAction((EventHandler<ActionEvent>) (Object) onExpand);
 
             expandedProperty().addListener((a, b, newValue) -> expandIcon.setRotate(newValue ? 180 : 0));

@@ -52,7 +52,7 @@ public class SponsorPage extends StackPane {
             StackPane sponsorPane = new StackPane();
             sponsorPane.getStyleClass().add("card");
             sponsorPane.setCursor(Cursor.HAND);
-            sponsorPane.setOnMouseClicked(e -> onSponsor());
+            sponsorPane.setOnAction(e -> onSponsor());
 
             GridPane gridPane = new GridPane();
 

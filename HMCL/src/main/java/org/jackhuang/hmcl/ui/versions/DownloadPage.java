@@ -355,7 +355,7 @@ public class DownloadPage extends Control implements DecoratorPage {
             pane.getChildren().setAll(FXUtils.limitingSize(imageView, 40, 40), content);
 
             RipplerContainer container = new RipplerContainer(pane);
-            container.setOnMouseClicked(e -> Controllers.navigate(new DownloadPage(page, addon, version, callback)));
+            container.setOnAction(e -> Controllers.navigate(new DownloadPage(page, addon, version, callback)));
             getChildren().setAll(container);
 
             ModTranslations.Mod mod = ModTranslations.getTranslationsByRepositoryType(page.repository.getType()).getModByCurseForgeId(addon.getSlug());
@@ -382,7 +382,7 @@ public class DownloadPage extends Control implements DecoratorPage {
             JFXButton saveAsButton = new JFXButton();
 
             RipplerContainer container = new RipplerContainer(pane);
-            container.setOnMouseClicked(e -> selfPage.download(dataItem));
+            container.setOnAction(e -> selfPage.download(dataItem));
             getChildren().setAll(container);
 
             saveAsButton.getStyleClass().add("toggle-icon4");

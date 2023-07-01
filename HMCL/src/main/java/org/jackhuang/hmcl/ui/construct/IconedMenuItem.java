@@ -26,7 +26,7 @@ public class IconedMenuItem extends IconedItem {
         super(node, text);
 
         getStyleClass().setAll("iconed-menu-item");
-        setOnMouseClicked(e -> action.run());
+        setOnAction(e -> action.run());
     }
 
     public IconedMenuItem addTooltip(String tooltip) {

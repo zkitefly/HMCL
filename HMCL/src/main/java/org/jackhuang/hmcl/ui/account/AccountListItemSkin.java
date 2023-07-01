@@ -94,7 +94,7 @@ public class AccountListItemSkin extends SkinBase<AccountListItem> {
         JFXButton btnMove = new JFXButton();
         SpinnerPane spinnerMove = new SpinnerPane();
         spinnerMove.getStyleClass().add("small-spinner-pane");
-        btnMove.setOnMouseClicked(e -> {
+        btnMove.setOnAction(e -> {
             Account account = skinnable.getAccount();
             Accounts.getAccounts().remove(account);
             if (account.isPortable()) {
@@ -129,7 +129,7 @@ public class AccountListItemSkin extends SkinBase<AccountListItem> {
         JFXButton btnRefresh = new JFXButton();
         SpinnerPane spinnerRefresh = new SpinnerPane();
         spinnerRefresh.getStyleClass().setAll("small-spinner-pane");
-        btnRefresh.setOnMouseClicked(e -> {
+        btnRefresh.setOnAction(e -> {
             spinnerRefresh.showSpinner();
             skinnable.refreshAsync()
                     .whenComplete(Schedulers.javafx(), ex -> {
@@ -149,7 +149,7 @@ public class AccountListItemSkin extends SkinBase<AccountListItem> {
 
         JFXButton btnUpload = new JFXButton();
         SpinnerPane spinnerUpload = new SpinnerPane();
-        btnUpload.setOnMouseClicked(e -> {
+        btnUpload.setOnAction(e -> {
             Task<?> uploadTask = skinnable.uploadSkin();
             if (uploadTask != null) {
                 spinnerUpload.showSpinner();
@@ -168,7 +168,7 @@ public class AccountListItemSkin extends SkinBase<AccountListItem> {
         right.getChildren().add(spinnerUpload);
 
         JFXButton btnRemove = new JFXButton();
-        btnRemove.setOnMouseClicked(e -> skinnable.remove());
+        btnRemove.setOnAction(e -> skinnable.remove());
         btnRemove.getStyleClass().add("toggle-icon4");
         BorderPane.setAlignment(btnRemove, Pos.CENTER);
         btnRemove.setGraphic(SVG.delete(Theme.blackFillBinding(), -1, -1));

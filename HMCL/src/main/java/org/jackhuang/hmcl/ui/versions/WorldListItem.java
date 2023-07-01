@@ -51,7 +51,7 @@ public class WorldListItem extends Control {
 
         subtitle.set(i18n("world.description", world.getFileName(), Locales.SIMPLE_DATE_FORMAT.get().format(new Date(world.getLastPlayed())), world.getGameVersion() == null ? i18n("message.unknown") : world.getGameVersion()));
 
-        setOnMouseClicked(event -> showInfo());
+        setOnAction(event -> showInfo());
     }
 
     @Override

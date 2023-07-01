@@ -76,7 +76,7 @@ public class WorldListItemSkin extends SkinBase<WorldListItem> {
         right.setAlignment(Pos.CENTER_RIGHT);
 
         JFXButton btnManage = new JFXButton();
-        btnManage.setOnMouseClicked(e -> {
+        btnManage.setOnAction(e -> {
             popup.show(root, JFXPopup.PopupVPosition.TOP, JFXPopup.PopupHPosition.RIGHT, 0, root.getHeight());
         });
         btnManage.getStyleClass().add("toggle-icon4");

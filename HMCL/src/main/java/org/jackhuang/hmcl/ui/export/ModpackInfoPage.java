@@ -178,7 +178,7 @@ public final class ModpackInfoPage extends Control implements WizardPage {
 
                 if (skinnable.controller.getSettings().get(MODPACK_TYPE) == MODPACK_TYPE_SERVER) {
                     Hyperlink hyperlink = new Hyperlink(i18n("modpack.wizard.step.initialization.server"));
-                    hyperlink.setOnMouseClicked(e -> {
+                    hyperlink.setOnAction(e -> {
                         FXUtils.openLink("https://hmcl.huangyuhui.net/api/redirect/server-modpack");
                     });
                     borderPane.setTop(hyperlink);

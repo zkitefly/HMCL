@@ -51,7 +51,7 @@ public class FontComboBox extends JFXComboBox<String> {
         itemsProperty().bind(BindingMapping.of(valueProperty())
                         .map(value -> value == null ? emptyObservableList() : singletonObservableList(value)));
 
-        setOnMouseClicked(e -> {
+        setOnAction(e -> {
             if (loaded)
                 return;
             itemsProperty().unbind();

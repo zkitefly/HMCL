@@ -278,7 +278,7 @@ public class CreateAccountPane extends JFXDialogLayout implements DialogAware {
                         hintPane.setSegment(i18n("account.methods.microsoft.hint"));
                     }
                 });
-                hintPane.setOnMouseClicked(e -> {
+                hintPane.setOnAction(e -> {
                     if (deviceCode.get() != null) {
                         FXUtils.copyText(deviceCode.get().getUserCode());
                     }
@@ -678,7 +678,7 @@ public class CreateAccountPane extends JFXDialogLayout implements DialogAware {
                     TexturesLoader.bindAvatar(portraitCanvas, service, profile.getId());
 
                     IconedItem accountItem = new IconedItem(portraitCanvas, profile.getName());
-                    accountItem.setOnMouseClicked(e -> {
+                    accountItem.setOnAction(e -> {
                         selectedProfile = profile;
                         latch.countDown();
                     });

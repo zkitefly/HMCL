@@ -340,7 +340,7 @@ public final class LogWindow extends Stage {
                 BorderPane bottom = new BorderPane();
 
                 JFXButton exportGameCrashInfoButton = new JFXButton(i18n("logwindow.export_game_crash_logs"));
-                exportGameCrashInfoButton.setOnMouseClicked(e -> getSkinnable().onExportGameCrashInfo());
+                exportGameCrashInfoButton.setOnAction(e -> getSkinnable().onExportGameCrashInfo());
                 exportGameCrashInfoButton.visibleProperty().bind(getSkinnable().showCrashReport);
                 bottom.setLeft(exportGameCrashInfoButton);
 
@@ -354,13 +354,13 @@ public final class LogWindow extends Stage {
                 control.autoScroll.bind(autoScrollCheckBox.selectedProperty());
 
                 JFXButton terminateButton = new JFXButton(i18n("logwindow.terminate_game"));
-                terminateButton.setOnMouseClicked(e -> getSkinnable().onTerminateGame());
+                terminateButton.setOnAction(e -> getSkinnable().onTerminateGame());
 
                 JFXButton exportLogsButton = new JFXButton(i18n("button.export"));
-                exportLogsButton.setOnMouseClicked(e -> getSkinnable().onExportLogs());
+                exportLogsButton.setOnAction(e -> getSkinnable().onExportLogs());
 
                 JFXButton clearButton = new JFXButton(i18n("button.clear"));
-                clearButton.setOnMouseClicked(e -> getSkinnable().onClear());
+                clearButton.setOnAction(e -> getSkinnable().onClear());
                 hBox.getChildren().setAll(autoScrollCheckBox, exportLogsButton, terminateButton, clearButton);
 
                 vbox.getChildren().add(bottom);

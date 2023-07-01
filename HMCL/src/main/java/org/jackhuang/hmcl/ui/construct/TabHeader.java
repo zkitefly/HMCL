@@ -594,7 +594,7 @@ public class TabHeader extends Control implements TabControl, PageAware {
 
                 FXUtils.onChangeAndOperate(tab.selectedProperty(), selected -> inner.pseudoClassStateChanged(SELECTED_PSEUDOCLASS_STATE, selected));
 
-                this.setOnMouseClicked(event -> {
+                this.setOnAction(event -> {
                     if (event.getButton() == MouseButton.PRIMARY) {
                         this.setOpacity(1);
                         getSkinnable().getSelectionModel().select(tab);

@@ -415,7 +415,7 @@ class ModListPageSkin extends SkinBase<ModListPage> {
             }
             checkBox.selectedProperty().bindBidirectional(booleanProperty = dataItem.active);
             restoreButton.setVisible(!dataItem.getModInfo().getMod().getOldFiles().isEmpty());
-            restoreButton.setOnMouseClicked(e -> {
+            restoreButton.setOnAction(e -> {
                 menu.get().getContent().setAll(dataItem.getModInfo().getMod().getOldFiles().stream()
                         .map(localModFile -> new IconedMenuItem(null, localModFile.getVersion(), () -> {
                             popup.get().hide();
@@ -426,10 +426,10 @@ class ModListPageSkin extends SkinBase<ModListPage> {
 
                 popup.get().show(restoreButton, JFXPopup.PopupVPosition.TOP, JFXPopup.PopupHPosition.RIGHT, 0, restoreButton.getHeight());
             });
-            revealButton.setOnMouseClicked(e -> {
+            revealButton.setOnAction(e -> {
                 FXUtils.showFileInExplorer(dataItem.getModInfo().getFile());
             });
-            infoButton.setOnMouseClicked(e -> {
+            infoButton.setOnAction(e -> {
                 Controllers.dialog(new ModInfoDialog(dataItem));
             });
         }

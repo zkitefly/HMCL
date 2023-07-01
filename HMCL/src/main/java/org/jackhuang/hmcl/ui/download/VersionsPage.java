@@ -97,7 +97,7 @@ public final class VersionsPage extends BorderPane implements WizardPage, Refres
         HintPane hintPane = new HintPane();
         hintPane.setText(i18n("sponsor.bmclapi"));
         hintPane.getStyleClass().add("sponsor-pane");
-        hintPane.setOnMouseClicked(e -> onSponsor());
+        hintPane.setOnAction(e -> onSponsor());
         BorderPane.setMargin(hintPane, new Insets(10, 10, 0, 10));
         this.setTop(hintPane);
 
@@ -148,7 +148,7 @@ public final class VersionsPage extends BorderPane implements WizardPage, Refres
             failedPane.getStyleClass().add("notice-pane");
             {
                 Label label = new Label(i18n("download.failed.refresh"));
-                label.setOnMouseClicked(e -> onRefresh());
+                label.setOnAction(e -> onRefresh());
 
                 failedPane.getChildren().setAll(label);
             }
@@ -157,7 +157,7 @@ public final class VersionsPage extends BorderPane implements WizardPage, Refres
             emptyPane.getStyleClass().add("notice-pane");
             {
                 Label label = new Label(i18n("download.failed.empty"));
-                label.setOnMouseClicked(e -> onBack());
+                label.setOnAction(e -> onBack());
 
                 emptyPane.getChildren().setAll(label);
             }
@@ -183,7 +183,7 @@ public final class VersionsPage extends BorderPane implements WizardPage, Refres
         EnumMap<VersionIconType, Image> icons = new EnumMap<>(VersionIconType.class);
         list.setCellFactory(listView -> new RemoteVersionListCell(lastCell, icons));
 
-        list.setOnMouseClicked(e -> {
+        list.setOnAction(e -> {
             if (list.getSelectionModel().getSelectedIndex() < 0)
                 return;
             navigation.getSettings().put(libraryId, list.getSelectionModel().getSelectedItem());
