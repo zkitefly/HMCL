@@ -67,7 +67,7 @@ public enum ModTranslations {
 
     private final String resourceName;
     private List<Mod> mods;
-    private Map<String, Mod> modIdMap; // mod id -> mod
+    private Map<String, Mod> modSubnameMap; // mod name -> mod
     private Map<String, Mod> curseForgeMap; // curseforge id -> mod
     private List<Pair<String, Mod>> keywords;
     private int maxKeywordLength = -1;
@@ -84,10 +84,10 @@ public enum ModTranslations {
     }
 
     @Nullable
-    public Mod getModById(String id) {
-        if (StringUtils.isBlank(id) || !loadModIdMap()) return null;
+    public Mod getModByName(String name) {
+        if (StringUtils.isBlank(name) || !loadModSubnameMap()) return null;
 
-        return modIdMap.get(id);
+        return modSubnameMap.get(name);
     }
 
     public abstract String getMcmodUrl(Mod mod);
@@ -149,8 +149,8 @@ public enum ModTranslations {
         return true;
     }
 
-    private boolean loadModIdMap() {
-        if (modIdMap != null) {
+    private boolean loadModSubnameMap() {
+        if (modSubnameMap != null) {
             return true;
         }
 
@@ -158,12 +158,11 @@ public enum ModTranslations {
             if (!loadFromResource()) return false;
         }
 
-        modIdMap = new HashMap<>();
+        modSubnameMap = new HashMap<>();
         for (Mod mod : mods) {
-            for (String id : mod.getModIds()) {
-                if (StringUtils.isNotBlank(id) && !"examplemod".equals(id)) {
-                    modIdMap.put(id, mod);
-                }
+            String name = mod.getSubname();
+            if (StringUtils.isNotBlank(name) && !"examplemod".equals(name)) {
+                modSubnameMap.put(name, mod);
             }
         }
         return true;
