@@ -61,8 +61,7 @@ import org.jackhuang.hmcl.util.io.FileUtils;
 import org.jackhuang.hmcl.util.io.NetworkUtils;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -322,15 +321,19 @@ class ModListPageSkin extends SkinBase<ModListPage> {
                     try (FileSystem fs = CompressingUtils.createReadOnlyZipFileSystem(modInfo.getModInfo().getFile())) {
                         Path iconPath = fs.getPath(modInfo.getModInfo().getLogoPath());
                         if (Files.exists(iconPath)) {
-                            ByteArrayOutputStream stream = new ByteArrayOutputStream();
-                            Files.copy(iconPath, stream);
-                            return new ByteArrayInputStream(stream.toByteArray());
+                            try (InputStream stream = Files.newInputStream(iconPath)) {
+                                Image image = new Image(stream, 40, 40, true, true);
+                                if (image.getWidth() == image.getHeight() && image.getWidth() > 0 && image.getHeight() > 0) {
+                                    return image;
+                                }
+                            } catch (Exception ignored) {
+                            }
                         }
                     }
                     return null;
-                }).whenComplete(Schedulers.javafx(), (stream, exception) -> {
-                    if (stream != null) {
-                        imageView.setImage(new Image(stream, 40, 40, true, true));
+                }).whenComplete(Schedulers.javafx(), (image, exception) -> {
+                    if (image != null) {
+                        imageView.setImage(image);
                     } else {
                         imageView.setImage(FXUtils.newBuiltinImage("/assets/img/command.png", 40, 40, true, true));
                     }
