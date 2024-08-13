@@ -163,10 +163,6 @@ public enum ModTranslations {
             String name = mod.getSubname();
             if (StringUtils.isNotBlank(name) && !"examplemod".equals(name)) {
                 modSubnameMap.put(name, mod);
-                if (name.matches(".* .*$")) { // 如果 name 有且仅有一个空格
-                    name = name.replace(" ", "");
-                    modSubnameMap.put(name, mod);
-                }
             }
         }
         return true;
