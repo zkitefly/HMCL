@@ -24,6 +24,7 @@ import org.jackhuang.hmcl.util.io.IOUtils;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static org.jackhuang.hmcl.util.logging.Logger.LOG;
@@ -163,8 +164,10 @@ public enum ModTranslations {
             String name = mod.getSubname();
             if (StringUtils.isNotBlank(name) && !"examplemod".equals(name)) {
                 modSubnameMap.put(name, mod);
-                if (name.matches(".* .*$")) { // 如果 name 有且仅有一个空格
+                String illegalCharsPattern = "[^\\x00-\\x7F]"; // 匹配 ASCII 范围（0-127）之外的任何字符
+                if (name.matches(".* .*$") || Pattern.compile(illegalCharsPattern).matcher(name).find()) { // 如果 name 有且仅有一个空格
                     name = name.replace(" ", "");
+                    name = name.replaceAll(illegalCharsPattern, "");
                     modSubnameMap.put(name, mod);
                 }
             }
