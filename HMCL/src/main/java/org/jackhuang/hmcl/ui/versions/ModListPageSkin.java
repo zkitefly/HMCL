@@ -91,6 +91,9 @@ class ModListPageSkin extends SkinBase<ModListPage> {
     // FXThread
     private boolean isSearching = false;
 
+    // 添加排序状态字段
+    private boolean ascending = true;
+
     ModListPageSkin(ModListPage skinnable) {
         super(skinnable);
 
@@ -122,6 +125,14 @@ class ModListPageSkin extends SkinBase<ModListPage> {
                 pause.playFromStart();
             });
 
+            // 添加排序按钮
+            JFXButton sortButton = new JFXButton(ascending ? "A-Z" : "Z-A");
+            sortButton.setOnAction(e -> {
+                ascending = !ascending;
+                sortButton.setText(ascending ? "A-Z" : "Z-A");
+                sortItems();
+            });
+
             JFXButton closeSearchBar = createToolbarButton2(null, SVG.CLOSE,
                     () -> {
                         changeToolbar(toolbarNormal);
@@ -133,7 +144,7 @@ class ModListPageSkin extends SkinBase<ModListPage> {
 
             onEscPressed(searchField, closeSearchBar::fire);
 
-            searchBar.getChildren().setAll(searchField, closeSearchBar);
+            searchBar.getChildren().setAll(searchField, sortButton, closeSearchBar);
 
             // Toolbar Normal
             toolbarNormal.getChildren().setAll(
@@ -221,6 +232,17 @@ class ModListPageSkin extends SkinBase<ModListPage> {
         }
     }
 
+    // 添加排序方法
+    private void sortItems() {
+        List<ModInfoObject> items = new ArrayList<>(listView.getItems());
+        if (ascending) {
+            items.sort(ModInfoObject::compareTo);
+        } else {
+            items.sort((a, b) -> b.compareTo(a));
+        }
+        listView.getItems().setAll(items);
+    }
+
     private void search() {
         isSearching = true;
 
@@ -253,6 +275,9 @@ class ModListPageSkin extends SkinBase<ModListPage> {
                 }
             }
         }
+
+        // 搜索后保持排序
+        sortItems();
     }
 
     static class ModInfoObject extends RecursiveTreeObject<ModInfoObject> implements Comparable<ModInfoObject> {
