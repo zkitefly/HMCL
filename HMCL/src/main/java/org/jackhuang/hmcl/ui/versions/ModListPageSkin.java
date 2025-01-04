@@ -91,7 +91,6 @@ class ModListPageSkin extends SkinBase<ModListPage> {
     // FXThread
     private boolean isSearching = false;
 
-    // 添加排序状态字段
     private boolean ascending = true;
 
     ModListPageSkin(ModListPage skinnable) {
@@ -139,7 +138,13 @@ class ModListPageSkin extends SkinBase<ModListPage> {
 
                         isSearching = false;
                         searchField.clear();
-                        Bindings.bindContent(listView.getItems(), getSkinnable().getItems());
+                        List<ModInfoObject> items = new ArrayList<>(getSkinnable().getItems());
+                        if (!ascending) {
+                            items.sort((a, b) -> b.compareTo(a));
+                        } else {
+                            items.sort(ModInfoObject::compareTo);
+                        }
+                        listView.getItems().setAll(items);
                     });
 
             onEscPressed(searchField, closeSearchBar::fire);
@@ -196,6 +201,12 @@ class ModListPageSkin extends SkinBase<ModListPage> {
             skinnable.getItems().addListener((ListChangeListener<? super ModInfoObject>) c -> {
                 if (isSearching) {
                     search();
+                } else {
+                    if (!ascending) {
+                        List<ModInfoObject> items = new ArrayList<>(listView.getItems());
+                        items.sort((a, b) -> b.compareTo(a));
+                        listView.getItems().setAll(items);
+                    }
                 }
             });
 
@@ -246,14 +257,11 @@ class ModListPageSkin extends SkinBase<ModListPage> {
     private void search() {
         isSearching = true;
 
-        Bindings.unbindContent(listView.getItems(), getSkinnable().getItems());
-
+        List<ModInfoObject> searchResults = new ArrayList<>();
         String queryString = searchField.getText();
         if (StringUtils.isBlank(queryString)) {
-            listView.getItems().setAll(getSkinnable().getItems());
+            searchResults.addAll(getSkinnable().getItems());
         } else {
-            listView.getItems().clear();
-
             Predicate<String> predicate;
             if (queryString.startsWith("regex:")) {
                 try {
@@ -271,13 +279,18 @@ class ModListPageSkin extends SkinBase<ModListPage> {
             // Do we need to search in the background thread?
             for (ModInfoObject item : getSkinnable().getItems()) {
                 if (predicate.test(item.getModInfo().getFileName())) {
-                    listView.getItems().add(item);
+                    searchResults.add(item);
                 }
             }
         }
 
-        // 搜索后保持排序
-        sortItems();
+        if (!ascending) {
+            searchResults.sort((a, b) -> b.compareTo(a));
+        } else {
+            searchResults.sort(ModInfoObject::compareTo);
+        }
+        
+        listView.getItems().setAll(searchResults);
     }
 
     static class ModInfoObject extends RecursiveTreeObject<ModInfoObject> implements Comparable<ModInfoObject> {
