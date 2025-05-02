@@ -344,7 +344,32 @@ public final class SelfDependencyPatcher {
                 }
             }
             dialog.dispose();
+            cleanupUnusedFiles();
             return;
+        }
+    }
+
+    private void cleanupUnusedFiles() throws IOException {
+        Set<String> expectedFiles = dependencies.stream()
+                .map(DependencyDescriptor::filename)
+                .collect(toSet());
+
+        if (!Files.exists(DependencyDescriptor.DEPENDENCIES_DIR_PATH)) {
+            return;
+        }
+
+        try (var files = Files.list(DependencyDescriptor.DEPENDENCIES_DIR_PATH)) {
+            files.forEach(file -> {
+                String filename = file.getFileName().toString();
+                if (!expectedFiles.contains(filename)) {
+                    try {
+                        Files.delete(file);
+                        LOG.info("Deleted unused dependency file: " + filename);
+                    } catch (IOException e) {
+                        LOG.warning("Failed to delete unused dependency file: " + filename);
+                    }
+                }
+            });
         }
     }
 
