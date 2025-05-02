@@ -64,6 +64,7 @@ import java.util.List;
 import java.util.*;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Stream;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.stream.Collectors.toSet;
@@ -358,7 +359,7 @@ public final class SelfDependencyPatcher {
             return;
         }
 
-        try (var files = Files.list(DependencyDescriptor.DEPENDENCIES_DIR_PATH)) {
+        try (Stream<Path> files = Files.list(DependencyDescriptor.DEPENDENCIES_DIR_PATH)) {
             files.forEach(file -> {
                 String filename = file.getFileName().toString();
                 if (!expectedFiles.contains(filename)) {
