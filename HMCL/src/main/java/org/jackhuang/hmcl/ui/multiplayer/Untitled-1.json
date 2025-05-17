@@ -1,0 +1,148 @@
+{
+    "downloadsUrl": [
+        "https://github.com/EasyTier/EasyTier/releases/download/v2.2.4/{FILE_NAME}",
+        "https://gh-proxy.com/https://github.com/EasyTier/EasyTier/releases/download/v2.2.4/{FILE_NAME}"
+    ],
+    "platforms": {
+        "freebsd": {
+            "architectures": {
+                "x86_64": {
+                    "filename": "easytier-freebsd-13.2-x86_64-v2.2.4.zip",
+                    "path": [
+                        "easytier-freebsd-13.2-x86_64/easytier-core",
+                        "easytier-freebsd-13.2-x86_64/easytier-cli"
+                    ],
+                    "sha1": ""
+                }
+            }
+        },
+        "linux": {
+            "architectures": {
+                "x86_64": {
+                    "filename": "easytier-linux-x86_64-v2.2.4.zip",
+                    "path": [
+                        "easytier-linux-x86_64/easytier-core",
+                        "easytier-linux-x86_64/easytier-cli"
+                    ],
+                    "sha1": ""
+                },
+                "aarch64": {
+                    "filename": "easytier-linux-aarch64-v2.2.4.zip",
+                    "path": [
+                        "easytier-linux-aarch64/easytier-core",
+                        "easytier-linux-aarch64/easytier-cli"
+                    ],
+                    "sha1": ""
+                },
+                "arm": {
+                    "filename": "easytier-linux-arm-v2.2.4.zip",
+                    "path": [
+                        "easytier-linux-arm/easytier-core",
+                        "easytier-linux-arm/easytier-cli"
+                    ],
+                    "sha1": ""
+                },
+                "armhf": {
+                    "filename": "easytier-linux-armhf-v2.2.4.zip",
+                    "path": [
+                        "easytier-linux-armhf/easytier-core",
+                        "easytier-linux-armhf/easytier-cli"
+                    ],
+                    "sha1": ""
+                },
+                "armv7": {
+                    "filename": "easytier-linux-armv7-v2.2.4.zip",
+                    "path": [
+                        "easytier-linux-armv7/easytier-core",
+                        "easytier-linux-armv7/easytier-cli"
+                    ],
+                    "sha1": ""
+                },
+                "armv7hf": {
+                    "filename": "easytier-linux-armv7hf-v2.2.4.zip",
+                    "path": [
+                        "easytier-linux-armv7hf/easytier-core",
+                        "easytier-linux-armv7hf/easytier-cli"
+                    ],
+                    "sha1": ""
+                },
+                "mips": {
+                    "filename": "easytier-linux-mips-v2.2.4.zip",
+                    "path": [
+                        "easytier-linux-mips/easytier-core",
+                        "easytier-linux-mips/easytier-cli"
+                    ],
+                    "sha1": ""
+                },
+                "mipsel": {
+                    "filename": "easytier-linux-mipsel-v2.2.4.zip",
+                    "path": [
+                        "easytier-linux-mipsel/easytier-core",
+                        "easytier-linux-mipsel/easytier-cli"
+                    ],
+                    "sha1": ""
+                }
+            }
+        },
+        "macos": {
+            "architectures": {
+                "x86_64": {
+                    "filename": "easytier-macos-x86_64-v2.2.4.zip",
+                    "path": [
+                        "easytier-macos-x86_64/easytier-core",
+                        "easytier-macos-x86_64/easytier-cli"
+                    ],
+                    "sha1": ""
+                },
+                "aarch64": {
+                    "filename": "easytier-macos-aarch64-v2.2.4.zip",
+                    "path": [
+                        "easytier-macos-aarch64/easytier-core",
+                        "easytier-macos-aarch64/easytier-cli"
+                    ],
+                    "sha1": ""
+                }
+            }
+        },
+        "windows": {
+            "architectures": {
+                "x86_64": {
+                    "filename": "easytier-windows-x86_64-v2.2.4.zip",
+                    "path": [
+                        "easytier-windows-x86_64/easytier-core.exe",
+                        "easytier-windows-x86_64/easytier-cli.exe",
+                        "easytier-windows-x86_64/wintun.dll",
+                        "easytier-windows-x86_64/Packet.dll"
+                    ],
+                    "sha1": ""
+                },
+                "arm64": {
+                    "filename": "easytier-windows-arm64-v2.2.4.zip",
+                    "path": [
+                        "easytier-windows-arm64/easytier-core.exe",
+                        "easytier-windows-arm64/easytier-cli.exe",
+                        "easytier-windows-arm64/wintun.dll",
+                        "easytier-windows-arm64/Packet.dll"
+                    ],
+                    "sha1": ""
+                }
+            }
+        }
+    },
+    "commands": [
+        {
+            "type": "default",
+            "command": "--network-name {NETWORK_NAME} --network-secret {NETWORK_SECRET} --dhcp --peers {PEERS}"
+        },
+        {
+            "type": "disable-p2p",
+            "command": "--disable-p2p"
+        }
+    ],
+    "servers": [
+        {
+            "name": "Easytier 官方服务器",
+            "url": "tcp://public.easytier.cn:11010"
+        }
+    ]
+}
