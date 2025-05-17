@@ -89,17 +89,17 @@ public class LocalServerBroadcaster implements AutoCloseable {
                 Thread broadcastMOTDThread = newThread(() -> broadcastMOTD(serverSocket.getLocalPort()), "BroadcastMOTD");
                 broadcastMOTDThread.start();
 
-                LOG.log(Level.INFO, "Listening " + serverSocket.getLocalSocketAddress());
+                LOG.info( "Listening " + serverSocket.getLocalSocketAddress());
 
                 while (running) {
                     Socket forwardedSocket = serverSocket.accept();
-                    LOG.log(Level.INFO, "Accepting client");
+                    LOG.info( "Accepting client");
                     newThread(() -> forwardTraffic(forwardingSocket, forwardedSocket), "Forward S->D").start();
                     newThread(() -> forwardTraffic(forwardedSocket, forwardingSocket), "Forward D->S").start();
                 }
             }
         } catch (IOException | UnresolvedAddressException e) {
-            LOG.log(Level.WARNING, "Error in forwarding port", e);
+            LOG.warning( "Error in forwarding port", e);
         } finally {
             close();
             onExit.fireEvent(new Event(this));
@@ -112,11 +112,11 @@ public class LocalServerBroadcaster implements AutoCloseable {
             while (true) {
                 int len = is.read(buf, 0, buf.length);
                 if (len < 0) break;
-                LOG.log(Level.INFO, "Forwarding buffer " + len);
+                LOG.info( "Forwarding buffer " + len);
                 os.write(buf, 0, len);
             }
         } catch (IOException e) {
-            LOG.log(Level.WARNING, "Disconnected", e);
+            LOG.warning("Disconnected", e);
         }
     }
 
@@ -127,7 +127,7 @@ public class LocalServerBroadcaster implements AutoCloseable {
             socket = new DatagramSocket();
             broadcastAddress = InetAddress.getByName("224.0.2.60");
         } catch (IOException e) {
-            LOG.log(Level.WARNING, "Failed to create datagram socket", e);
+            LOG.warning( "Failed to create datagram socket", e);
             return;
         }
 
@@ -136,9 +136,9 @@ public class LocalServerBroadcaster implements AutoCloseable {
                 byte[] data = String.format("[MOTD]%s[/MOTD][AD]%d[/AD]", i18n("multiplayer.session.name.motd"), port).getBytes(StandardCharsets.UTF_8);
                 DatagramPacket packet = new DatagramPacket(data, 0, data.length, broadcastAddress, 4445);
                 socket.send(packet);
-                LOG.finest("Broadcast server 0.0.0.0:" + port);
+                LOG.info("Broadcast server 0.0.0.0:" + port);
             } catch (IOException e) {
-                LOG.log(Level.WARNING, "Failed to send motd packet", e);
+                LOG.warning("Failed to send motd packet", e);
             }
 
             try {

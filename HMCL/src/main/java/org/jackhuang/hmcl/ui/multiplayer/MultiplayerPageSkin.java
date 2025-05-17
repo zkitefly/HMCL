@@ -74,7 +74,7 @@ public class MultiplayerPageSkin extends DecoratorAnimatedPage.DecoratorAnimated
             AdvancedListBox sideBar = new AdvancedListBox()
                     .addNavigationDrawerItem(item -> {
                         item.setTitle(i18n("version.launch"));
-                        item.setLeftGraphic(wrap(SVG::rocketLaunchOutline));
+                        item.setLeftGraphic(wrap(SVG.SETTINGS));
                         item.setOnAction(e -> {
                             control.launchGame();
                         });
@@ -82,38 +82,38 @@ public class MultiplayerPageSkin extends DecoratorAnimatedPage.DecoratorAnimated
                     .startCategory(i18n("help"))
                     .addNavigationDrawerItem(item -> {
                         item.setTitle(i18n("help"));
-                        item.setLeftGraphic(wrap(SVG::helpCircleOutline));
+                        item.setLeftGraphic(wrap(SVG.SETTINGS));
                         item.setOnAction(e -> FXUtils.openLink("https://docs.hmcl.net/multiplayer"));
                     })
 //                    .addNavigationDrawerItem(item -> {
 //                        item.setTitle(i18n("multiplayer.help.1"));
-//                        item.setLeftGraphic(wrap(SVG::helpCircleOutline));
+//                        item.setLeftGraphic(wrap(SVG.SETTINGS));
 //                        item.setOnAction(e -> FXUtils.openLink("https://docs.hmcl.net/multiplayer/admin.html"));
 //                    })
                     .addNavigationDrawerItem(item -> {
                         item.setTitle(i18n("multiplayer.help.2"));
-                        item.setLeftGraphic(wrap(SVG::helpCircleOutline));
+                        item.setLeftGraphic(wrap(SVG.SETTINGS));
                         item.setOnAction(e -> FXUtils.openLink("https://docs.hmcl.net/multiplayer/help.html"));
                     })
                     .addNavigationDrawerItem(item -> {
                         item.setTitle(i18n("multiplayer.help.3"));
-                        item.setLeftGraphic(wrap(SVG::helpCircleOutline));
+                        item.setLeftGraphic(wrap(SVG.SETTINGS));
                         item.setOnAction(e -> FXUtils.openLink("https://docs.hmcl.net/multiplayer/help.html#%E5%88%9B%E5%BB%BA%E6%96%B9"));
                     })
                     .addNavigationDrawerItem(item -> {
                         item.setTitle(i18n("multiplayer.help.4"));
-                        item.setLeftGraphic(wrap(SVG::helpCircleOutline));
+                        item.setLeftGraphic(wrap(SVG.SETTINGS));
                         item.setOnAction(e -> FXUtils.openLink("https://docs.hmcl.net/multiplayer/help.html#%E5%8F%82%E4%B8%8E%E8%80%85"));
                     })
                     .addNavigationDrawerItem(item -> {
                         item.setTitle(i18n("multiplayer.help.text"));
-                        item.setLeftGraphic(wrap(SVG::rocketLaunchOutline));
+                        item.setLeftGraphic(wrap(SVG.SETTINGS));
                         item.setOnAction(e -> FXUtils.openLink("https://docs.hmcl.net/multiplayer/text.html"));
                     })
                     .addNavigationDrawerItem(report -> {
                         report.setTitle(i18n("feedback"));
-                        report.setLeftGraphic(wrap(SVG::messageAlertOutline));
-                        report.setOnAction(e -> HMCLService.openRedirectLink("multiplayer-feedback"));
+                        report.setLeftGraphic(wrap(SVG.SETTINGS));
+                        // report.setOnAction(e -> HMCLService.openRedirectLink("multiplayer-feedback"));
                     });
             FXUtils.setLimitWidth(sideBar, 200);
             setLeft(sideBar);
@@ -155,7 +155,7 @@ public class MultiplayerPageSkin extends DecoratorAnimatedPage.DecoratorAnimated
 
                         JFXHyperlink applyLink = new JFXHyperlink(i18n("multiplayer.token.apply"));
                         BorderPane.setAlignment(applyLink, Pos.CENTER_RIGHT);
-                        applyLink.setOnAction(e -> HMCLService.openRedirectLink("multiplayer-static-token"));
+                        // applyLink.setOnAction(e -> HMCLService.openRedirectLink("multiplayer-static-token"));
                         tokenPane.setRight(applyLink);
                     }
 
@@ -203,7 +203,7 @@ public class MultiplayerPageSkin extends DecoratorAnimatedPage.DecoratorAnimated
 
                         JFXHyperlink tutorial = new JFXHyperlink(i18n("multiplayer.master.video_tutorial"));
                         titlePane.setRight(tutorial);
-                        tutorial.setOnAction(e -> HMCLService.openRedirectLink("multiplayer-tutorial-master"));
+                        // tutorial.setOnAction(e -> HMCLService.openRedirectLink("multiplayer-tutorial-master"));
                         masterPane.addRow(0, titlePane);
 
                         HintPane hintPane = new HintPane(MessageType.INFO);
@@ -253,7 +253,7 @@ public class MultiplayerPageSkin extends DecoratorAnimatedPage.DecoratorAnimated
                         titlePane.setLeft(title);
 
                         JFXHyperlink tutorial = new JFXHyperlink(i18n("multiplayer.slave.video_tutorial"));
-                        tutorial.setOnAction(e -> HMCLService.openRedirectLink("multiplayer-tutorial-slave"));
+                        // tutorial.setOnAction(e -> HMCLService.openRedirectLink("multiplayer-tutorial-slave"));
                         titlePane.setRight(tutorial);
 
                         HintPane hintPane = new HintPane(MessageType.INFO);
@@ -434,7 +434,7 @@ public class MultiplayerPageSkin extends DecoratorAnimatedPage.DecoratorAnimated
                 pane.setAlignment(Pos.CENTER_LEFT);
 
                 JFXHyperlink aboutLink = new JFXHyperlink(i18n("about"));
-                aboutLink.setOnAction(e -> HMCLService.openRedirectLink("multiplayer-about"));
+                // aboutLink.setOnAction(e -> HMCLService.openRedirectLink("multiplayer-about"));
 
                 HBox placeholder = new HBox();
                 HBox.setHgrow(placeholder, Priority.ALWAYS);

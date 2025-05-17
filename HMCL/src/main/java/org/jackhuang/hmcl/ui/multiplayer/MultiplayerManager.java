@@ -69,8 +69,8 @@ public final class MultiplayerManager {
     private static final String HIPER_DOWNLOAD_URL = "https://gitcode.net/to/hiper/-/raw/master/";
     private static final String HIPER_PACKAGES_URL = HIPER_DOWNLOAD_URL + "packages.sha1";
     private static final String HIPER_POINTS_URL = "https://cert.mcer.cn/point.yml";
-    private static final Path HIPER_TEMP_CONFIG_PATH = Metadata.HMCL_DIRECTORY.resolve("hiper.yml");
-    private static final Path HIPER_CONFIG_DIR = Metadata.HMCL_DIRECTORY.resolve("hiper-config");
+    private static final Path HIPER_TEMP_CONFIG_PATH = Metadata.HMCL_CURRENT_DIRECTORY.resolve("hiper.yml");
+    private static final Path HIPER_CONFIG_DIR = Metadata.HMCL_CURRENT_DIRECTORY.resolve("hiper-config");
     public static final Path HIPER_PATH = getHiperLocalDirectory().resolve(getHiperFileName());
     public static final int HIPER_AGREEMENT_VERSION = 3;
     private static final String REMOTE_ADDRESS = "127.0.0.1";
@@ -104,7 +104,7 @@ public final class MultiplayerManager {
     private static final String GSUDO_TARGET_ARCH = Architecture.SYSTEM_ARCH == Architecture.X86_64 ? "amd64" : "x86";
     private static final String GSUDO_FILE_NAME = "gsudo.exe";
     private static final String GSUDO_DOWNLOAD_URL = "https://gitcode.net/glavo/gsudo-release/-/raw/75c952ea3afe8792b0db4fe9bab87d41b21e5895/" + GSUDO_TARGET_ARCH + "/" + GSUDO_FILE_NAME;
-    private static final Path GSUDO_LOCAL_FILE = Metadata.HMCL_DIRECTORY.resolve("libraries").resolve("gsudo").resolve("gsudo").resolve(GSUDO_VERSION).resolve(GSUDO_TARGET_ARCH).resolve(GSUDO_FILE_NAME);
+    private static final Path GSUDO_LOCAL_FILE = Metadata.HMCL_CURRENT_DIRECTORY.resolve("libraries").resolve("gsudo").resolve("gsudo").resolve(GSUDO_VERSION).resolve(GSUDO_TARGET_ARCH).resolve(GSUDO_FILE_NAME);
     private static final boolean USE_GSUDO;
 
     static final boolean IS_ADMINISTRATOR;
@@ -152,7 +152,7 @@ public final class MultiplayerManager {
             Files.deleteIfExists(HIPER_TEMP_CONFIG_PATH);
             Files.deleteIfExists(getConfigPath(ConfigHolder.globalConfig().getMultiplayerToken()));
         } catch (IOException e) {
-            LOG.log(Level.WARNING, "Failed to delete config", e);
+            LOG.warning("Failed to delete config", e);
         }
     }
 
@@ -245,7 +245,7 @@ public final class MultiplayerManager {
 
                 future.complete(null);
             } catch (IOException e) {
-                LOG.log(Level.WARNING, "Failed to verify HiPer files", e);
+                LOG.warning("Failed to verify HiPer files", e);
                 Platform.runLater(() -> Controllers.taskDialog(MultiplayerManager.downloadHiper()
                         .whenComplete(exception -> {
                             if (exception == null)
@@ -264,7 +264,7 @@ public final class MultiplayerManager {
             try {
                 downloadHiperConfig(token, configPath);
             } catch (IOException e) {
-                LOG.log(Level.WARNING, "configuration file cloud cache token has been not available, try to use the local configuration file", e);
+                LOG.warning("configuration file cloud cache token has been not available, try to use the local configuration file", e);
             }
 
             if (Files.exists(configPath)) {
@@ -273,7 +273,7 @@ public final class MultiplayerManager {
                     output.write("\n");
                     output.write("logging:\n");
                     output.write("  format: json\n");
-                    output.write("  file_path: '" + Metadata.HMCL_DIRECTORY.resolve("logs").resolve("hiper.log").toString().replace("'", "''") + "'\n");
+                    output.write("  file_path: '" + Metadata.HMCL_CURRENT_DIRECTORY.resolve("logs").resolve("hiper.log").toString().replace("'", "''") + "'\n");
                 }
             }
 
@@ -321,7 +321,7 @@ public final class MultiplayerManager {
     }
 
     public static Path getHiperLocalDirectory() {
-        return Metadata.HMCL_DIRECTORY.resolve("libraries").resolve("hiper").resolve("hiper").resolve("binary");
+        return Metadata.HMCL_CURRENT_DIRECTORY.resolve("libraries").resolve("hiper").resolve("hiper").resolve("binary");
     }
 
     public static class HiperSession extends ManagedProcess {
@@ -381,7 +381,7 @@ public final class MultiplayerManager {
                                     onValidUntil.fireEvent(new HiperShowValidUntilEvent(this, date));
                                 }
                             } catch (JsonParseException | ParseException e) {
-                                LOG.log(Level.WARNING, "Failed to parse certification expire time string: " + validUntil.get());
+                                LOG.warning("Failed to parse certification expire time string: " + validUntil.get());
                             }
                         }
                     }
@@ -395,7 +395,7 @@ public final class MultiplayerManager {
                     }
                 }
             } catch (JsonParseException e) {
-                LOG.log(Level.WARNING, "Failed to parse hiper log: " + log, e);
+                LOG.warning("Failed to parse hiper log: " + log, e);
             }
         }
 
@@ -415,7 +415,7 @@ public final class MultiplayerManager {
                     if (writer != null)
                         writer.close();
                 } catch (IOException e) {
-                    LOG.log(Level.WARNING, "Failed to close Hiper stdin writer", e);
+                    LOG.warning("Failed to close Hiper stdin writer", e);
                 }
             }
             destroyRelatedThreads();
@@ -427,7 +427,7 @@ public final class MultiplayerManager {
                 writer.write("quit\n");
                 writer.flush();
             } catch (IOException e) {
-                LOG.log(Level.WARNING, "Failed to quit HiPer", e);
+                LOG.warning("Failed to quit HiPer", e);
             }
             try {
                 getProcess().waitFor(1, TimeUnit.SECONDS);

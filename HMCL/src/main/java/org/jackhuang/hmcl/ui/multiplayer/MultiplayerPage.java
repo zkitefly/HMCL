@@ -218,7 +218,7 @@ public class MultiplayerPage extends DecoratorAnimatedPage implements DecoratorP
             LOG.warning("HiPer invalid configuration");
             return i18n("multiplayer.token.malformed");
         } else if (e instanceof ChecksumMismatchException) {
-            LOG.log(Level.WARNING, "Failed to verify HiPer files", e);
+            LOG.warning("Failed to verify HiPer files", e);
             return i18n("multiplayer.error.file_not_found");
         } else if (e instanceof MultiplayerManager.HiperExitException) {
             int exitCode = ((MultiplayerManager.HiperExitException) e).getExitCode();
@@ -228,7 +228,7 @@ public class MultiplayerPage extends DecoratorAnimatedPage implements DecoratorP
             LOG.warning("invalid token");
             return i18n("multiplayer.token.invalid");
         } else {
-            LOG.log(Level.WARNING, "Unknown HiPer exception", e);
+            LOG.warning("Unknown HiPer exception", e);
             return e.getLocalizedMessage() + "\n" + StringUtils.getStackTrace(e);
         }
     }
@@ -337,7 +337,7 @@ public class MultiplayerPage extends DecoratorAnimatedPage implements DecoratorP
                                         ).replaceAll("[\\\\\"]", "\\\\$0"))
                                 );
                             } catch (Throwable e) {
-                                LOG.log(Level.WARNING, "Failed to modify sudoers", e);
+                                LOG.warning("Failed to modify sudoers", e);
                             }
                         }, null);
                     }
