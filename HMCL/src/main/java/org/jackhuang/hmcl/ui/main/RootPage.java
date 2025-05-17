@@ -177,6 +177,13 @@ public class RootPage extends DecoratorAnimatedPage implements DecoratorPage {
             launcherSettingsItem.setOnAction(e -> Controllers.navigate(Controllers.getSettingsPage()));
 
             // sixth item in left sidebar
+            AdvancedListItem multiplayerItem = new AdvancedListItem();
+            multiplayerItem.setLeftGraphic(wrap(SVG.SETTINGS));
+            multiplayerItem.setActionButtonVisible(false);
+            multiplayerItem.setTitle(i18n("multiplayer"));
+            multiplayerItem.setOnAction(e -> Controllers.navigate(Controllers.getMultiplayerPage()));
+
+            // sixth item in left sidebar
             AdvancedListItem chatItem = new AdvancedListItem();
             chatItem.setLeftGraphic(wrap(SVG.CHAT));
             chatItem.setActionButtonVisible(false);
