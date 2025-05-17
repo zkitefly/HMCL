@@ -20,6 +20,8 @@ package org.jackhuang.hmcl.ui.multiplayer;
 import com.jfoenix.controls.JFXButton;
 import com.jfoenix.controls.JFXPasswordField;
 import com.jfoenix.controls.JFXTextField;
+import com.jfoenix.controls.JFXToggleButton;
+
 import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
 import javafx.beans.WeakInvalidationListener;
@@ -40,7 +42,6 @@ import org.jackhuang.hmcl.ui.SVG;
 import org.jackhuang.hmcl.ui.construct.*;
 import org.jackhuang.hmcl.ui.construct.MessageDialogPane.MessageType;
 import org.jackhuang.hmcl.ui.decorator.DecoratorAnimatedPage;
-import org.jackhuang.hmcl.util.HMCLService;
 import org.jackhuang.hmcl.util.Lang;
 import org.jackhuang.hmcl.util.StringUtils;
 import org.jackhuang.hmcl.util.i18n.Locales;
@@ -69,50 +70,33 @@ public class MultiplayerPageSkin extends DecoratorAnimatedPage.DecoratorAnimated
     protected MultiplayerPageSkin(MultiplayerPage control) {
         super(control);
 
+        // 保留左侧边栏
         {
             AdvancedListBox sideBar = new AdvancedListBox()
-                    .addNavigationDrawerItem(item -> {
-                        item.setTitle(i18n("version.launch"));
-                        item.setLeftGraphic(wrap(SVG.SETTINGS));
-                        item.setOnAction(e -> {
-                            control.launchGame();
-                        });
+                    .addNavigationDrawerItem(i18n("version.launch"), SVG.SETTINGS, () -> {
+                        control.launchGame();
                     })
                     .startCategory(i18n("help"))
-                    .addNavigationDrawerItem(item -> {
-                        item.setTitle(i18n("help"));
-                        item.setLeftGraphic(wrap(SVG.SETTINGS));
-                        item.setOnAction(e -> FXUtils.openLink("https://docs.hmcl.net/multiplayer"));
+                    .addNavigationDrawerItem(i18n("help"), SVG.SETTINGS, () -> {
+                        FXUtils.openLink("https://docs.hmcl.net/multiplayer");
                     })
-//                    .addNavigationDrawerItem(item -> {
-//                        item.setTitle(i18n("multiplayer.help.1"));
-//                        item.setLeftGraphic(wrap(SVG.SETTINGS));
-//                        item.setOnAction(e -> FXUtils.openLink("https://docs.hmcl.net/multiplayer/admin.html"));
-//                    })
-                    .addNavigationDrawerItem(item -> {
-                        item.setTitle(i18n("multiplayer.help.2"));
-                        item.setLeftGraphic(wrap(SVG.SETTINGS));
-                        item.setOnAction(e -> FXUtils.openLink("https://docs.hmcl.net/multiplayer/help.html"));
+                    .addNavigationDrawerItem(i18n("multiplayer.help.1"), SVG.SETTINGS, () -> {
+                        FXUtils.openLink("https://docs.hmcl.net/multiplayer/admin.html");
                     })
-                    .addNavigationDrawerItem(item -> {
-                        item.setTitle(i18n("multiplayer.help.3"));
-                        item.setLeftGraphic(wrap(SVG.SETTINGS));
-                        item.setOnAction(e -> FXUtils.openLink("https://docs.hmcl.net/multiplayer/help.html#%E5%88%9B%E5%BB%BA%E6%96%B9"));
+                    .addNavigationDrawerItem(i18n("multiplayer.help.2"), SVG.SETTINGS, () -> {
+                        FXUtils.openLink("https://docs.hmcl.net/multiplayer/help.html");
                     })
-                    .addNavigationDrawerItem(item -> {
-                        item.setTitle(i18n("multiplayer.help.4"));
-                        item.setLeftGraphic(wrap(SVG.SETTINGS));
-                        item.setOnAction(e -> FXUtils.openLink("https://docs.hmcl.net/multiplayer/help.html#%E5%8F%82%E4%B8%8E%E8%80%85"));
+                    .addNavigationDrawerItem(i18n("multiplayer.help.3"), SVG.SETTINGS, () -> {
+                        FXUtils.openLink("https://docs.hmcl.net/multiplayer/help.html#%E5%88%9B%E5%BB%BA%E6%96%B9");
                     })
-                    .addNavigationDrawerItem(item -> {
-                        item.setTitle(i18n("multiplayer.help.text"));
-                        item.setLeftGraphic(wrap(SVG.SETTINGS));
-                        item.setOnAction(e -> FXUtils.openLink("https://docs.hmcl.net/multiplayer/text.html"));
+                    .addNavigationDrawerItem(i18n("multiplayer.help.4"), SVG.SETTINGS, () -> {
+                        FXUtils.openLink("https://docs.hmcl.net/multiplayer/help.html#%E5%8F%82%E4%B8%8E%E8%80%85");
                     })
-                    .addNavigationDrawerItem(report -> {
-                        report.setTitle(i18n("feedback"));
-                        report.setLeftGraphic(wrap(SVG.SETTINGS));
-                        // report.setOnAction(e -> HMCLService.openRedirectLink("multiplayer-feedback"));
+                    .addNavigationDrawerItem(i18n("multiplayer.help.text"), SVG.SETTINGS, () -> {
+                        FXUtils.openLink("https://docs.hmcl.net/multiplayer/text.html");
+                    })
+                    .addNavigationDrawerItem(i18n("feedback"), SVG.SETTINGS, () -> {
+                        // HMCLService.openRedirectLink("multiplayer-feedback")
                     });
             FXUtils.setLimitWidth(sideBar, 200);
             setLeft(sideBar);
@@ -126,333 +110,105 @@ public class MultiplayerPageSkin extends DecoratorAnimatedPage.DecoratorAnimated
             scrollPane.setFitToWidth(true);
             setCenter(scrollPane);
 
-            VBox mainPane = new VBox(16);
+            // 创建房间框
+            ComponentList createRoomPane = new ComponentList();
             {
-                ComponentList offPane = new ComponentList();
-                {
-                    HintPane hintPane = new HintPane(MessageType.WARNING);
-                    hintPane.setText(i18n("multiplayer.off.hint"));
+                createRoomPane.setTitle(i18n("multiplayer.create_room"));
 
-                    BorderPane tokenPane = new BorderPane();
-                    {
-                        Label tokenTitle = new Label(i18n("multiplayer.token"));
-                        BorderPane.setAlignment(tokenTitle, Pos.CENTER_LEFT);
-                        tokenPane.setLeft(tokenTitle);
-                        // Token acts like password, we hide it here preventing users from accidentally leaking their token when taking screenshots.
-                        JFXPasswordField tokenField = new JFXPasswordField();
-                        BorderPane.setAlignment(tokenField, Pos.CENTER_LEFT);
-                        BorderPane.setMargin(tokenField, new Insets(0, 8, 0, 8));
-                        tokenPane.setCenter(tokenField);
-                        tokenField.textProperty().bindBidirectional(globalConfig().multiplayerTokenProperty());
-                        tokenField.setPromptText(i18n("multiplayer.token.prompt"));
-
-                        Validator validator = new Validator("multiplayer.token.format_invalid", StringUtils::isAlphabeticOrNumber);
-                        InvalidationListener listener = any -> tokenField.validate();
-                        validator.getProperties().put(validator, listener);
-                        tokenField.textProperty().addListener(new WeakInvalidationListener(listener));
-                        tokenField.getValidators().add(validator);
-
-                        JFXHyperlink applyLink = new JFXHyperlink(i18n("multiplayer.token.apply"));
-                        BorderPane.setAlignment(applyLink, Pos.CENTER_RIGHT);
-                        // applyLink.setOnAction(e -> HMCLService.openRedirectLink("multiplayer-static-token"));
-                        tokenPane.setRight(applyLink);
-                    }
-
-                    HBox startPane = new HBox();
-                    {
-                        JFXButton startButton = new JFXButton(i18n("multiplayer.off.start"));
-                        startButton.getStyleClass().add("jfx-button-raised");
-                        startButton.setButtonType(JFXButton.ButtonType.RAISED);
-                        startButton.setOnMouseClicked(e -> control.start());
-                        startButton.disableProperty().bind(MultiplayerManager.tokenInvalid);
-
-                        startPane.getChildren().setAll(startButton);
-                        startPane.setAlignment(Pos.CENTER_RIGHT);
-                    }
-
-                    if (!MultiplayerManager.IS_ADMINISTRATOR)
-                        offPane.getContent().add(hintPane);
-                    offPane.getContent().addAll(tokenPane, startPane);
-                }
-
-                ComponentList onPane = new ComponentList();
-                {
-                    BorderPane expirationPane = new BorderPane();
-                    expirationPane.setLeft(new Label(i18n("multiplayer.session.expiration")));
-                    Label expirationLabel = new Label();
-                    expirationLabel.textProperty().bind(Bindings.createStringBinding(() ->
-                                    control.getExpireTime() == null ? "" : Locales.SIMPLE_DATE_FORMAT.get().format(control.getExpireTime()),
-                            control.expireTimeProperty()));
-                    expirationPane.setRight(expirationLabel);
-
-                    GridPane masterPane = new GridPane();
-                    masterPane.setVgap(8);
-                    masterPane.setHgap(16);
-                    ColumnConstraints titleColumn = new ColumnConstraints();
-                    ColumnConstraints valueColumn = new ColumnConstraints();
-                    ColumnConstraints rightColumn = new ColumnConstraints();
-                    masterPane.getColumnConstraints().setAll(titleColumn, valueColumn, rightColumn);
-                    valueColumn.setFillWidth(true);
-                    valueColumn.setHgrow(Priority.ALWAYS);
-                    {
-                        BorderPane titlePane = new BorderPane();
-                        GridPane.setColumnSpan(titlePane, 3);
-                        Label title = new Label(i18n("multiplayer.master"));
-                        titlePane.setLeft(title);
-
-                        JFXHyperlink tutorial = new JFXHyperlink(i18n("multiplayer.master.video_tutorial"));
-                        titlePane.setRight(tutorial);
-                        // tutorial.setOnAction(e -> HMCLService.openRedirectLink("multiplayer-tutorial-master"));
-                        masterPane.addRow(0, titlePane);
-
-                        HintPane hintPane = new HintPane(MessageType.INFO);
-                        GridPane.setColumnSpan(hintPane, 3);
-                        hintPane.setText(i18n("multiplayer.master.hint"));
-                        masterPane.addRow(1, hintPane);
-
-                        Label portTitle = new Label(i18n("multiplayer.master.port"));
-                        BorderPane.setAlignment(portTitle, Pos.CENTER_LEFT);
-
-                        JFXTextField portTextField = new JFXTextField();
-                        GridPane.setColumnSpan(portTextField, 2);
-                        FXUtils.setValidateWhileTextChanged(portTextField, true);
-                        portTextField.getValidators().add(new Validator(i18n("multiplayer.master.port.validate"), (text) -> {
-                            Integer value = Lang.toIntOrNull(text);
-                            return value != null && 0 <= value && value <= 65535;
-                        }));
-                        portTextField.textProperty().bindBidirectional(control.portProperty(), new StringConverter<Number>() {
-                            @Override
-                            public String toString(Number object) {
-                                return Integer.toString(object.intValue());
-                            }
-
-                            @Override
-                            public Number fromString(String string) {
-                                return Lang.parseInt(string, 0);
-                            }
-                        });
-                        masterPane.addRow(2, portTitle, portTextField);
-
-                        Label serverAddressTitle = new Label(i18n("multiplayer.master.server_address"));
-                        BorderPane.setAlignment(serverAddressTitle, Pos.CENTER_LEFT);
-                        Label serverAddressLabel = new Label();
-                        BorderPane.setAlignment(serverAddressLabel, Pos.CENTER_LEFT);
-                        serverAddressLabel.textProperty().bind(Bindings.createStringBinding(() -> {
-                            return (control.getAddress() == null ? "" : control.getAddress()) + ":" + control.getPort();
-                        }, control.addressProperty(), control.portProperty()));
-                        JFXButton copyButton = new JFXButton(i18n("multiplayer.master.server_address.copy"));
-                        copyButton.setOnAction(e -> FXUtils.copyText(serverAddressLabel.getText()));
-                        masterPane.addRow(3, serverAddressTitle, serverAddressLabel, copyButton);
-                    }
-
-                    VBox slavePane = new VBox(8);
-                    {
-                        BorderPane titlePane = new BorderPane();
-                        Label title = new Label(i18n("multiplayer.slave"));
-                        titlePane.setLeft(title);
-
-                        JFXHyperlink tutorial = new JFXHyperlink(i18n("multiplayer.slave.video_tutorial"));
-                        // tutorial.setOnAction(e -> HMCLService.openRedirectLink("multiplayer-tutorial-slave"));
-                        titlePane.setRight(tutorial);
-
-                        HintPane hintPane = new HintPane(MessageType.INFO);
-                        GridPane.setColumnSpan(hintPane, 3);
-                        hintPane.setText(i18n("multiplayer.slave.hint"));
-                        slavePane.getChildren().add(hintPane);
-
-                        HintPane hintPane2 = new HintPane(MessageType.WARNING);
-                        GridPane.setColumnSpan(hintPane2, 3);
-                        hintPane2.setText(i18n("multiplayer.slave.hint2"));
-                        slavePane.getChildren().add(hintPane2);
-
-                        GridPane notBroadcastingPane = new GridPane();
-                        {
-                            notBroadcastingPane.setVgap(8);
-                            notBroadcastingPane.setHgap(16);
-                            notBroadcastingPane.getColumnConstraints().setAll(titleColumn, valueColumn, rightColumn);
-
-                            Label addressTitle = new Label(i18n("multiplayer.slave.server_address"));
-
-                            JFXTextField addressField = new JFXTextField();
-                            FXUtils.setValidateWhileTextChanged(addressField, true);
-                            addressField.getValidators().add(new ServerAddressValidator());
-
-                            JFXButton startButton = new JFXButton(i18n("multiplayer.slave.server_address.start"));
-                            startButton.setOnAction(e -> control.broadcast(addressField.getText()));
-                            notBroadcastingPane.addRow(0, addressTitle, addressField, startButton);
-                        }
-
-                        GridPane broadcastingPane = new GridPane();
-                        {
-                            broadcastingPane.setVgap(8);
-                            broadcastingPane.setHgap(16);
-                            broadcastingPane.getColumnConstraints().setAll(titleColumn, valueColumn, rightColumn);
-
-                            Label addressTitle = new Label(i18n("multiplayer.slave.server_address"));
-                            Label addressLabel = new Label();
-                            addressLabel.textProperty().bind(Bindings.createStringBinding(() ->
-                                            control.getBroadcaster() != null ? control.getBroadcaster().getAddress() : "",
-                                    control.broadcasterProperty()));
-
-                            JFXButton stopButton = new JFXButton(i18n("multiplayer.slave.server_address.stop"));
-                            stopButton.setOnAction(e -> control.stopBroadcasting());
-                            broadcastingPane.addRow(0, addressTitle, addressLabel, stopButton);
-                        }
-
-                        FXUtils.onChangeAndOperate(control.broadcasterProperty(), broadcaster -> {
-                            if (broadcaster == null) {
-                                slavePane.getChildren().setAll(titlePane, hintPane, hintPane2, notBroadcastingPane);
-                            } else {
-                                slavePane.getChildren().setAll(titlePane, hintPane, hintPane2, broadcastingPane);
-                            }
-                        });
-                    }
-
-                    FXUtils.onChangeAndOperate(control.expireTimeProperty(), t -> {
-                        if (t == null) {
-                            onPane.getContent().setAll(masterPane, slavePane);
-                        } else {
-                            onPane.getContent().setAll(expirationPane, masterPane, slavePane);
-                        }
-                    });
-                }
-
-                FXUtils.onChangeAndOperate(getSkinnable().sessionProperty(), session -> {
-                    if (session == null) {
-                        mainPane.getChildren().setAll(offPane);
+                // 游戏局域网端口
+                HBox portBox = new HBox(8);
+                Label portLabel = new Label(i18n("multiplayer.port"));
+                JFXTextField portField = new JFXTextField();
+                portField.setPromptText("1024-65535");
+                portField.textProperty().addListener((observable, oldValue, newValue) -> {
+                    if (!newValue.matches("\\d*")) {
+                        portField.setText(newValue.replaceAll("[^\\d]", ""));
                     } else {
-                        mainPane.getChildren().setAll(onPane);
+                        int value = Integer.parseInt(newValue.isEmpty() ? "0" : newValue);
+                        if (value < 1024 || value > 65535) {
+                            portField.getStyleClass().add("error");
+                        } else {
+                            portField.getStyleClass().remove("error");
+                        }
                     }
                 });
+                portBox.getChildren().addAll(portLabel, portField);
+                createRoomPane.getContent().add(portBox);
+
+                // 禁用P2P开关
+                HBox p2pBox = new HBox(8);
+                Label p2pLabel = new Label(i18n("multiplayer.disable_p2p"));
+                JFXToggleButton p2pToggle = new JFXToggleButton();
+                p2pBox.getChildren().addAll(p2pLabel, p2pToggle);
+                createRoomPane.getContent().add(p2pBox);
+
+                // 自定义服务器开关和输入框
+                HBox serverBox = new HBox(8);
+                Label serverLabel = new Label(i18n("multiplayer.custom_server"));
+                JFXToggleButton serverToggle = new JFXToggleButton();
+                JFXTextField serverField = new JFXTextField();
+                serverField.setPromptText("tcp://server:port");
+                serverField.setVisible(false);
+                serverToggle.selectedProperty().addListener((observable, oldValue, newValue) -> {
+                    serverField.setVisible(newValue);
+                });
+                serverBox.getChildren().addAll(serverLabel, serverToggle, serverField);
+                createRoomPane.getContent().add(serverBox);
+
+                // 创建按钮
+                JFXButton createButton = new JFXButton(i18n("multiplayer.create"));
+                createButton.getStyleClass().add("jfx-button-raised");
+                createButton.setOnAction(e -> {
+                    String port = portField.getText();
+                    if(port.isEmpty() || Integer.parseInt(port) < 1024 || Integer.parseInt(port) > 65535) {
+                        Controllers.showToast(i18n("multiplayer.port.invalid"));
+                        return;
+                    }
+
+                    control.startRoom(
+                            Integer.parseInt(port),
+                            p2pToggle.isSelected(),
+                            serverToggle.isSelected() ? serverField.getText() : "tcp://public.easytier.cn:11010"
+                    );
+                });
+                createRoomPane.getContent().add(createButton);
             }
 
-            ComponentList persistencePane = new ComponentList();
+            // 加入房间框
+            ComponentList joinRoomPane = new ComponentList();
             {
-                HintPane hintPane = new HintPane(MessageType.WARNING);
-                hintPane.setText(i18n("multiplayer.persistence.hint"));
+                joinRoomPane.setTitle(i18n("multiplayer.join_room"));
 
-                BorderPane importPane = new BorderPane();
-                {
-                    Label left = new Label(i18n("multiplayer.persistence.import"));
-                    BorderPane.setAlignment(left, Pos.CENTER_LEFT);
-                    importPane.setLeft(left);
+                // 联机码输入框
+                HBox codeBox = new HBox(8);
+                Label codeLabel = new Label(i18n("multiplayer.join_code"));
+                JFXTextField codeField = new JFXTextField();
+                codeField.setPromptText(i18n("multiplayer.join_code.prompt"));
+                codeBox.getChildren().addAll(codeLabel, codeField);
+                joinRoomPane.getContent().add(codeBox);
 
-                    JFXButton importButton = new JFXButton(i18n("multiplayer.persistence.import.button"));
-                    importButton.setOnMouseClicked(e -> {
-                        Path targetPath = MultiplayerManager.getConfigPath(globalConfig().getMultiplayerToken());
-                        if (Files.exists(targetPath)) {
-                            LOG.warning("License file " + targetPath + " already exists");
-                            Controllers.dialog(i18n("multiplayer.persistence.import.file_already_exists"), null, MessageType.ERROR);
-                            return;
-                        }
+                // 加入按钮
+                JFXButton joinButton = new JFXButton(i18n("multiplayer.join"));
+                joinButton.getStyleClass().add("jfx-button-raised");
+                joinButton.setOnAction(e -> {
+                    String code = codeField.getText();
+                    if(code.isEmpty()) {
+                        Controllers.showToast(i18n("multiplayer.join_code.empty"));
+                        return;
+                    }
 
-                        FileChooser fileChooser = new FileChooser();
-                        fileChooser.setTitle(i18n("multiplayer.persistence.import.title"));
-                        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter(i18n("multiplayer.persistence.license_file"), "*.yml"));
-
-                        File file = fileChooser.showOpenDialog(Controllers.getStage());
-                        if (file == null)
-                            return;
-
-                        CompletableFuture<Boolean> future = new CompletableFuture<>();
-                        if (file.getName().matches("[a-z0-9]{40}.yml") && !targetPath.getFileName().toString().equals(file.getName())) {
-                            Controllers.confirm(i18n("multiplayer.persistence.import.token_not_match"), null, MessageType.QUESTION,
-                                    () -> future.complete(true),
-                                    () -> future.complete(false)) ;
-                        } else {
-                            future.complete(true);
-                        }
-                        future.thenAcceptAsync(Lang.wrapConsumer(c -> {
-                            if (c) Files.copy(file.toPath(), targetPath);
-                        })).exceptionally(exception -> {
-                            LOG.warning("Failed to import license file", exception);
-                            Platform.runLater(() -> Controllers.dialog(i18n("multiplayer.persistence.import.failed"), null, MessageType.ERROR));
-                            return null;
-                        });
-                    });
-                    importButton.disableProperty().bind(MultiplayerManager.tokenInvalid);
-                    importButton.getStyleClass().add("jfx-button-border");
-                    importPane.setRight(importButton);
-                }
-
-                BorderPane exportPane = new BorderPane();
-                {
-                    Label left = new Label(i18n("multiplayer.persistence.export"));
-                    BorderPane.setAlignment(left, Pos.CENTER_LEFT);
-                    exportPane.setLeft(left);
-
-                    JFXButton exportButton = new JFXButton(i18n("multiplayer.persistence.export.button"));
-                    exportButton.setOnMouseClicked(e -> {
-                        String token = globalConfig().getMultiplayerToken();
-                        Path configPath = MultiplayerManager.getConfigPath(token);
-
-                        FileChooser fileChooser = new FileChooser();
-                        fileChooser.setTitle(i18n("multiplayer.persistence.export.title"));
-                        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter(i18n("multiplayer.persistence.license_file"), "*.yml"));
-                        fileChooser.setInitialFileName(configPath.getFileName().toString());
-
-                        File file = fileChooser.showSaveDialog(Controllers.getStage());
-                        if (file == null)
-                            return;
-
-                        CompletableFuture.runAsync(Lang.wrap(() -> MultiplayerManager.downloadHiperConfig(token, configPath)), Schedulers.io())
-                                .handleAsync((ignored, exception) -> {
-                                    if (exception != null) {
-                                        LOG.info( "Unable to download hiper config file", e);
-                                    }
-
-                                    if (!Files.isRegularFile(configPath)) {
-                                        LOG.warning("License file " + configPath + " not exists");
-                                        Platform.runLater(() -> Controllers.dialog(i18n("multiplayer.persistence.export.file_not_exists"), null, MessageType.ERROR));
-                                        return null;
-                                    }
-
-                                    try {
-                                        Files.copy(configPath, file.toPath(), StandardCopyOption.REPLACE_EXISTING);
-                                    } catch (IOException ioException) {
-                                        LOG.warning("Failed to export license file", ioException);
-                                        Platform.runLater(() -> Controllers.dialog(i18n("multiplayer.persistence.export.failed"), null, MessageType.ERROR));
-                                    }
-
-                                    return null;
-                                });
-
-                    });
-                    exportButton.disableProperty().bind(MultiplayerManager.tokenInvalid);
-                    exportButton.getStyleClass().add("jfx-button-border");
-                    exportPane.setRight(exportButton);
-                }
-
-                persistencePane.getContent().setAll(hintPane, importPane, exportPane);
+                    try {
+                        control.joinRoom(code);
+                    } catch(Exception ex) {
+                        Controllers.showToast(i18n("multiplayer.join_code.invalid"));
+                    }
+                });
+                joinRoomPane.getContent().add(joinButton);
             }
 
-
-            ComponentList thanksPane = new ComponentList();
-            {
-                HBox pane = new HBox();
-                pane.setAlignment(Pos.CENTER_LEFT);
-
-                JFXHyperlink aboutLink = new JFXHyperlink(i18n("about"));
-                // aboutLink.setOnAction(e -> HMCLService.openRedirectLink("multiplayer-about"));
-
-                HBox placeholder = new HBox();
-                HBox.setHgrow(placeholder, Priority.ALWAYS);
-
-                pane.getChildren().setAll(
-                        new Label("Based on HiPer"),
-                        aboutLink,
-                        placeholder,
-                        FXUtils.segmentToTextFlow(i18n("multiplayer.powered_by"), Controllers::onHyperlinkAction));
-
-                thanksPane.getContent().addAll(pane);
-            }
-
-            content.getChildren().setAll(
-                    mainPane,
-                    ComponentList.createComponentListTitle(i18n("multiplayer.persistence")),
-                    persistencePane,
-                    ComponentList.createComponentListTitle(i18n("about")),
-                    thanksPane
+            content.getChildren().addAll(
+                    createRoomPane,
+                    joinRoomPane
             );
         }
     }

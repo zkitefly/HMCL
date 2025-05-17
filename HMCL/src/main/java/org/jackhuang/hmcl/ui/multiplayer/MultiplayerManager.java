@@ -17,7 +17,6 @@
  */
 package org.jackhuang.hmcl.ui.multiplayer;
 
-import com.google.gson.JsonParseException;
 import javafx.application.Platform;
 import org.jackhuang.hmcl.Metadata;
 import org.jackhuang.hmcl.event.Event;
@@ -27,7 +26,6 @@ import org.jackhuang.hmcl.task.Task;
 import org.jackhuang.hmcl.ui.Controllers;
 import org.jackhuang.hmcl.ui.FXUtils;
 import org.jackhuang.hmcl.util.*;
-import org.jackhuang.hmcl.util.gson.JsonUtils;
 import org.jackhuang.hmcl.util.io.HttpRequest;
 import org.jackhuang.hmcl.util.io.NetworkUtils;
 import org.jackhuang.hmcl.util.platform.Architecture;
@@ -35,6 +33,7 @@ import org.jackhuang.hmcl.util.platform.CommandBuilder;
 import org.jackhuang.hmcl.util.platform.ManagedProcess;
 import org.jackhuang.hmcl.util.platform.OperatingSystem;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -42,7 +41,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.nio.file.attribute.PosixFilePermission;
 import java.text.DateFormat;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -60,9 +58,8 @@ import static org.jackhuang.hmcl.util.logging.Logger.LOG;
  */
 public final class MultiplayerManager {
     static final String EASYTIER_VERSION = "v2.2.4";
-    private static final String DOWNLOAD_URL = "https://raw.gitcode.com/zkitefly/easytier-release/raw/95509cc94dfa6b69e2e893e73dee256a783c738d/";
-    public static final Path EASYTIERCORE_PATH = getEasytierLocalDirectory().resolve(getEasutierFileName("core"));
-    public static final Path EASYTIERCLI_PATH = getEasytierLocalDirectory().resolve(getEasutierFileName("cli"));
+    private static final String DOWNLOAD_URL = "https://raw.gitcode.com/zkitefly/easytier-release/raw/2f70217b9418e05779caf187e42c5a6786355195/";
+    public static final Path EASYTIER_PATH = getEasytierLocalDirectory().resolve(getEasutierFileName());
     public static final int EASYTIER_AGREEMENT_VERSION = 1;
     private static final String REMOTE_ADDRESS = "127.0.0.1";
     private static final String LOCAL_ADDRESS = "0.0.0.0";
@@ -83,7 +80,7 @@ public final class MultiplayerManager {
             pair(OperatingSystem.OSX, "macos")
     );
 
-    private static final String EASYTIER_TARGET_NAME = String.format("easytier-%s-%s-%s",
+    private static final String EASYTIER_TARGET_NAME = String.format("easytier-%s-%s",
             osMap.getOrDefault(OperatingSystem.CURRENT_OS, "windows"),
             archMap.getOrDefault(Architecture.SYSTEM_ARCH, "x86_64"));
 
@@ -130,8 +127,7 @@ public final class MultiplayerManager {
         if (HASH == null) {
             HASH = CompletableFuture.supplyAsync(wrap(() -> {
                 Map<String, String> hashes = new HashMap<>();
-                hashes.put(EASYTIER_DOWNLOAD_URL + getEasutierFileName("core"), HttpRequest.GET(EASYTIER_DOWNLOAD_URL + getEasutierFileName("core") + ".sha1").getString().trim());
-                hashes.put(EASYTIER_DOWNLOAD_URL + getEasutierFileName("cli"), HttpRequest.GET(EASYTIER_DOWNLOAD_URL + getEasutierFileName("cli") + ".sha1").getString().trim());
+                hashes.put(EASYTIER_DOWNLOAD_URL + getEasutierFileName(), HttpRequest.GET(EASYTIER_DOWNLOAD_URL + getEasutierFileName() + ".sha1").getString().trim());
                 if (USE_GSUDO) {
                     hashes.put(GSUDO_FILE_NAME, HttpRequest.GET(GSUDO_DOWNLOAD_URL + ".sha1").getString().trim());
                 }
@@ -154,13 +150,12 @@ public final class MultiplayerManager {
 
             List<Task<?>> tasks;
             if (OperatingSystem.CURRENT_OS == OperatingSystem.WINDOWS) {
-                if (!packagesHash.containsKey(EASYTIER_DOWNLOAD_URL + getEasutierFileName("core"))) {
+                if (!packagesHash.containsKey(EASYTIER_DOWNLOAD_URL + getEasutierFileName())) {
                     throw new EasytierUnsupportedPlatformException();
                 }
                 tasks = new ArrayList<>(4);
 
-                tasks.add(getFileDownloadTask.apply(EASYTIER_DOWNLOAD_URL + getEasutierFileName("core"), getEasutierFileName("core")));
-                tasks.add(getFileDownloadTask.apply(EASYTIER_DOWNLOAD_URL + getEasutierFileName("cli"), getEasutierFileName("cli")));
+                tasks.add(getFileDownloadTask.apply(EASYTIER_DOWNLOAD_URL + getEasutierFileName(), getEasutierFileName()));
                 if (USE_GSUDO)
                     tasks.add(new FileDownloadTask(
                             NetworkUtils.toURL(GSUDO_DOWNLOAD_URL),
@@ -168,23 +163,22 @@ public final class MultiplayerManager {
                             new FileDownloadTask.IntegrityCheck("SHA-1", packagesHash.get(GSUDO_FILE_NAME))
                     ));
             } else {
-                if (!packagesHash.containsKey(EASYTIER_DOWNLOAD_URL + getEasutierFileName("core"))) {
+                if (!packagesHash.containsKey(EASYTIER_DOWNLOAD_URL + getEasutierFileName())) {
                     throw new EasytierUnsupportedPlatformException();
                 }
                 tasks = Arrays.asList(
-                        getFileDownloadTask.apply(EASYTIER_DOWNLOAD_URL + getEasutierFileName("core"), getEasutierFileName("core")),
-                        getFileDownloadTask.apply(EASYTIER_DOWNLOAD_URL + getEasutierFileName("cli"), getEasutierFileName("cli"))
+                        getFileDownloadTask.apply(EASYTIER_DOWNLOAD_URL + getEasutierFileName(), getEasutierFileName())
                 );
             }
             return Task.allOf(tasks).thenRunAsync(() -> {
                 if (OperatingSystem.CURRENT_OS == OperatingSystem.LINUX || OperatingSystem.CURRENT_OS == OperatingSystem.OSX) {
-                    Set<PosixFilePermission> perm = Files.getPosixFilePermissions(EASYTIERCORE_PATH);
+                    Set<PosixFilePermission> perm = Files.getPosixFilePermissions(EASYTIER_PATH);
                     perm.add(PosixFilePermission.OWNER_EXECUTE);
-                    Files.setPosixFilePermissions(EASYTIERCORE_PATH, perm);
+                    Files.setPosixFilePermissions(EASYTIER_PATH, perm);
 
-                    perm = Files.getPosixFilePermissions(EASYTIERCLI_PATH);
+                    perm = Files.getPosixFilePermissions(EASYTIER_PATH);
                     perm.add(PosixFilePermission.OWNER_EXECUTE);
-                    Files.setPosixFilePermissions(EASYTIERCLI_PATH, perm);
+                    Files.setPosixFilePermissions(EASYTIER_PATH, perm);
                 }
             });
         });
@@ -230,32 +224,32 @@ public final class MultiplayerManager {
                     case WINDOWS:
                         if (USE_GSUDO) {
                             commandList.add(GSUDO_LOCAL_FILE.toString());
-                            commandList.add(EASYTIERCORE_PATH.toString());
+                            commandList.add(EASYTIER_PATH.toString());
                             commandList.addAll(Arrays.asList(baseCommand.split(" ")));
                         }
                         break;
                     case LINUX:
                         String askpass = System.getProperty("hmcl.askpass", System.getenv("HMCL_ASKPASS"));
                         if ("user".equalsIgnoreCase(askpass)) {
-                            commandList.addAll(Arrays.asList("sudo", "-A", EASYTIERCORE_PATH.toString()));
+                            commandList.addAll(Arrays.asList("sudo", "-A", EASYTIER_PATH.toString()));
                         } else if ("false".equalsIgnoreCase(askpass)) {
-                            commandList.addAll(Arrays.asList("sudo", "--non-interactive", EASYTIERCORE_PATH.toString()));
+                            commandList.addAll(Arrays.asList("sudo", "--non-interactive", EASYTIER_PATH.toString()));
                         } else {
                             if (Files.exists(Paths.get("/usr/bin/pkexec"))) {
-                                commandList.addAll(Arrays.asList("/usr/bin/pkexec", EASYTIERCORE_PATH.toString()));
+                                commandList.addAll(Arrays.asList("/usr/bin/pkexec", EASYTIER_PATH.toString()));
                             } else {
-                                commandList.addAll(Arrays.asList("sudo", "--non-interactive", EASYTIERCORE_PATH.toString()));
+                                commandList.addAll(Arrays.asList("sudo", "--non-interactive", EASYTIER_PATH.toString()));
                             }
                         }
                         commandList.addAll(Arrays.asList(baseCommand.split(" ")));
                         break;
                     case OSX:
-                        commandList.addAll(Arrays.asList("sudo", "--non-interactive", EASYTIERCORE_PATH.toString()));
+                        commandList.addAll(Arrays.asList("sudo", "--non-interactive", EASYTIER_PATH.toString()));
                         commandList.addAll(Arrays.asList(baseCommand.split(" ")));
                         break;
                 }
             } else {
-                commandList.add(EASYTIERCORE_PATH.toString());
+                commandList.add(EASYTIER_PATH.toString());
                 commandList.addAll(Arrays.asList(baseCommand.split(" ")));
             }
 
@@ -267,23 +261,11 @@ public final class MultiplayerManager {
         }));
     }
 
-    public static String getEasutierFileName(String type) {
+    public static String getEasutierFileName() {
         if (OperatingSystem.CURRENT_OS == OperatingSystem.WINDOWS) {
-            if (type.equals("core")) {
-                return "easytier-core.exe";
-            } else if (type.equals("cli")) {
-                return "easytier-cli.exe";
-            } else {
-                return "";
-            }
+            return "easytier-core.exe";
         } else {
-            if (type.equals("core")) {
-                return "easytier-core";
-            } else if (type.equals("cli")) {
-                return "easytier-cli";
-            } else {
-                return "";
-            }
+            return "easytier-core";
         }
     }
 
@@ -294,7 +276,6 @@ public final class MultiplayerManager {
     public static class EasytierSession extends ManagedProcess {
         private final EventManager<EasytierExitEvent> onExit = new EventManager<>();
         private final EventManager<EasytierIPEvent> onIPAllocated = new EventManager<>();
-        private final EventManager<EasytierShowValidUntilEvent> onValidUntil = new EventManager<>();
         private final BufferedWriter writer;
         private int error = 0;
 
@@ -313,57 +294,19 @@ public final class MultiplayerManager {
         }
 
         private void onLog(String log) {
-            if (!log.startsWith("{")) {
-                LOG.warning("[Easytier] " + log);
-
-                if (log.startsWith("failed to load config"))
+                LOG.info("[Easytier] " + log);
+                if (log.startsWith("error: unexpected argument"))
                     error = EasytierExitEvent.INVALID_CONFIGURATION;
                 else if (log.startsWith("sudo: ") || log.startsWith("Error getting authority") || log.startsWith("Error: An error occurred trying to start process"))
                     error = EasytierExitEvent.NO_SUDO_PRIVILEGES;
-                else if (log.startsWith("Failed to write to log, can't rename log file")) {
+                else if (log.contains("connecting to peer. dst:")) {
+                    error = EasytierExitEvent.FAILED_SERVER_URL;
+                    stop();
+                }
+                else if (log.contains("tun device error")) {
                     error = EasytierExitEvent.NO_SUDO_PRIVILEGES;
                     stop();
                 }
-
-                return;
-            }
-
-            try {
-                Map<?, ?> logJson = JsonUtils.fromNonNullJson(log, Map.class);
-                String msg = "";
-                if (logJson.containsKey("msg")) {
-                    msg = tryCast(logJson.get("msg"), String.class).orElse("");
-                    if (msg.contains("Failed to get a tun/tap device")) {
-                        error = EasytierExitEvent.FAILED_GET_DEVICE;
-                    }
-                    if (msg.contains("Failed to load certificate from config")) {
-                        error = EasytierExitEvent.FAILED_LOAD_CONFIG;
-                    }
-                    if (msg.contains("Validity of client certificate")) {
-                        Optional<String> validUntil = tryCast(logJson.get("valid"), String.class);
-                        if (validUntil.isPresent()) {
-                            try {
-                                synchronized (EASYTIER_VALID_TIME_FORMAT) {
-                                    Date date = EASYTIER_VALID_TIME_FORMAT.parse(validUntil.get());
-                                    onValidUntil.fireEvent(new EasytierShowValidUntilEvent(this, date));
-                                }
-                            } catch (JsonParseException | ParseException e) {
-                                LOG.warning("Failed to parse certification expire time string: " + validUntil.get());
-                            }
-                        }
-                    }
-                }
-
-                if (logJson.containsKey("network")) {
-                    Map<?, ?> network = tryCast(logJson.get("network"), Map.class).orElse(Collections.emptyMap());
-                    if (network.containsKey("IP") && msg.contains("Main HostMap created")) {
-                        Optional<String> ip = tryCast(network.get("IP"), String.class);
-                        ip.ifPresent(s -> onIPAllocated.fireEvent(new EasytierIPEvent(this, s)));
-                    }
-                }
-            } catch (JsonParseException e) {
-                LOG.warning("Failed to parse easytier log: " + log, e);
-            }
         }
 
         private void waitFor() {
@@ -391,12 +334,6 @@ public final class MultiplayerManager {
         @Override
         public void stop() {
             try {
-                writer.write("quit\n");
-                writer.flush();
-            } catch (IOException e) {
-                LOG.warning("Failed to quit Easytier", e);
-            }
-            try {
                 getProcess().waitFor(1, TimeUnit.SECONDS);
             } catch (InterruptedException ignored) {
             }
@@ -411,9 +348,9 @@ public final class MultiplayerManager {
             return onIPAllocated;
         }
 
-        public EventManager<EasytierShowValidUntilEvent> onValidUntil() {
-            return onValidUntil;
-        }
+//        public EventManager<EasytierShowValidUntilEvent> onValidUntil() {
+//            return onValidUntil;
+//        }
     }
 
     public static class EasytierExitEvent extends Event {
@@ -430,10 +367,8 @@ public final class MultiplayerManager {
 
         public static final int INTERRUPTED = -1;
         public static final int INVALID_CONFIGURATION = -2;
-        public static final int CERTIFICATE_EXPIRED = -3;
-        public static final int FAILED_GET_DEVICE = -4;
-        public static final int FAILED_LOAD_CONFIG = -5;
-        public static final int NO_SUDO_PRIVILEGES = -6;
+        public static final int NO_SUDO_PRIVILEGES = -3;
+        public static final int FAILED_SERVER_URL = -4;
     }
 
     public static class EasytierIPEvent extends Event {
@@ -449,18 +384,18 @@ public final class MultiplayerManager {
         }
     }
 
-    public static class EasytierShowValidUntilEvent extends Event {
-        private final Date validAt;
-
-        public EasytierShowValidUntilEvent(Object source, Date validAt) {
-            super(source);
-            this.validAt = validAt;
-        }
-
-        public Date getValidUntil() {
-            return validAt;
-        }
-    }
+//    public static class EasytierShowValidUntilEvent extends Event {
+//        private final Date validAt;
+//
+//        public EasytierShowValidUntilEvent(Object source, Date validAt) {
+//            super(source);
+//            this.validAt = validAt;
+//        }
+//
+//        public Date getValidUntil() {
+//            return validAt;
+//        }
+//    }
 
     public static class EasytierExitException extends RuntimeException {
         private final int exitCode;

@@ -17,6 +17,8 @@
  */
 package org.jackhuang.hmcl.ui.multiplayer;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.jfoenix.controls.JFXButton;
 import com.jfoenix.controls.JFXDialogLayout;
 import javafx.beans.property.*;
@@ -35,7 +37,6 @@ import org.jackhuang.hmcl.ui.construct.*;
 import org.jackhuang.hmcl.ui.decorator.DecoratorAnimatedPage;
 import org.jackhuang.hmcl.ui.decorator.DecoratorPage;
 import org.jackhuang.hmcl.ui.versions.Versions;
-import org.jackhuang.hmcl.util.HMCLService;
 import org.jackhuang.hmcl.util.StringUtils;
 import org.jackhuang.hmcl.util.TaskCancellationAction;
 import org.jackhuang.hmcl.util.io.ChecksumMismatchException;
@@ -45,7 +46,10 @@ import org.jackhuang.hmcl.util.platform.OperatingSystem;
 import org.jackhuang.hmcl.util.platform.SystemUtils;
 
 import java.io.File;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.Date;
+import java.util.UUID;
 import java.util.concurrent.CancellationException;
 import java.util.function.Consumer;
 
@@ -58,14 +62,14 @@ import static org.jackhuang.hmcl.util.i18n.I18n.i18n;
 public class MultiplayerPage extends DecoratorAnimatedPage implements DecoratorPage, PageAware {
     private final ReadOnlyObjectWrapper<State> state = new ReadOnlyObjectWrapper<>(State.fromTitle(i18n("multiplayer")));
 
-    private final ReadOnlyObjectWrapper<MultiplayerManager.HiperSession> session = new ReadOnlyObjectWrapper<>();
+    private final ReadOnlyObjectWrapper<MultiplayerManager.EasytierSession> session = new ReadOnlyObjectWrapper<>();
     private final IntegerProperty port = new SimpleIntegerProperty();
     private final StringProperty address = new SimpleStringProperty();
-    private final ReadOnlyObjectWrapper<Date> expireTime = new ReadOnlyObjectWrapper<>();
+//    private final ReadOnlyObjectWrapper<Date> expireTime = new ReadOnlyObjectWrapper<>();
 
-    private Consumer<MultiplayerManager.HiperExitEvent> onExit;
-    private Consumer<MultiplayerManager.HiperIPEvent> onIPAllocated;
-    private Consumer<MultiplayerManager.HiperShowValidUntilEvent> onValidUntil;
+    private Consumer<MultiplayerManager.EasytierExitEvent> onExit;
+    private Consumer<MultiplayerManager.EasytierIPEvent> onIPAllocated;
+//    private Consumer<MultiplayerManager.EasytierShowValidUntilEvent> onValidUntil;
 
     private final ReadOnlyObjectWrapper<LocalServerBroadcaster> broadcaster = new ReadOnlyObjectWrapper<>();
     private Consumer<Event> onBroadcasterExit = null;
@@ -75,7 +79,7 @@ public class MultiplayerPage extends DecoratorAnimatedPage implements DecoratorP
 
     @Override
     public void onPageShown() {
-        checkAgreement(this::downloadHiPerIfNecessary);
+        checkAgreement(this::downloadEasytierIfNecessary);
     }
 
     @Override
@@ -119,23 +123,15 @@ public class MultiplayerPage extends DecoratorAnimatedPage implements DecoratorP
         this.broadcaster.set(broadcaster);
     }
 
-    public Date getExpireTime() {
-        return expireTime.get();
-    }
+//    public ReadOnlyObjectWrapper<Date> expireTimeProperty() {
+//        return expireTime;
+//    }
 
-    public ReadOnlyObjectWrapper<Date> expireTimeProperty() {
-        return expireTime;
-    }
-
-    public void setExpireTime(Date expireTime) {
-        this.expireTime.set(expireTime);
-    }
-
-    public MultiplayerManager.HiperSession getSession() {
+    public MultiplayerManager.EasytierSession getSession() {
         return session.get();
     }
 
-    public ReadOnlyObjectProperty<MultiplayerManager.HiperSession> sessionProperty() {
+    public ReadOnlyObjectProperty<MultiplayerManager.EasytierSession> sessionProperty() {
         return session.getReadOnlyProperty();
     }
 
@@ -157,34 +153,34 @@ public class MultiplayerPage extends DecoratorAnimatedPage implements DecoratorP
     }
 
     private void checkAgreement(Runnable runnable) {
-        if (globalConfig().getMultiplayerAgreementVersion() < MultiplayerManager.HIPER_AGREEMENT_VERSION) {
-            JFXDialogLayout agreementPane = new JFXDialogLayout();
-            agreementPane.setHeading(new Label(i18n("launcher.agreement")));
-            agreementPane.setBody(new Label(i18n("multiplayer.agreement.prompt")));
-            JFXHyperlink agreementLink = new JFXHyperlink(i18n("launcher.agreement"));
-            agreementLink.setOnAction(e -> HMCLService.openRedirectLink("multiplayer-agreement"));
-            JFXButton yesButton = new JFXButton(i18n("launcher.agreement.accept"));
-            yesButton.getStyleClass().add("dialog-accept");
-            yesButton.setOnAction(e -> {
-                globalConfig().setMultiplayerAgreementVersion(MultiplayerManager.HIPER_AGREEMENT_VERSION);
-                runnable.run();
-                agreementPane.fireEvent(new DialogCloseEvent());
-            });
-            JFXButton noButton = new JFXButton(i18n("launcher.agreement.decline"));
-            noButton.getStyleClass().add("dialog-cancel");
-            noButton.setOnAction(e -> {
-                agreementPane.fireEvent(new DialogCloseEvent());
-                fireEvent(new PageCloseEvent());
-            });
-            agreementPane.setActions(agreementLink, yesButton, noButton);
-            Controllers.dialog(agreementPane);
-        } else {
+//        if (globalConfig().getMultiplayerAgreementVersion() < MultiplayerManager.HIPER_AGREEMENT_VERSION) {
+//            JFXDialogLayout agreementPane = new JFXDialogLayout();
+//            agreementPane.setHeading(new Label(i18n("launcher.agreement")));
+//            agreementPane.setBody(new Label(i18n("multiplayer.agreement.prompt")));
+//            JFXHyperlink agreementLink = new JFXHyperlink(i18n("launcher.agreement"));
+//            agreementLink.setOnAction(e -> HMCLService.openRedirectLink("multiplayer-agreement"));
+//            JFXButton yesButton = new JFXButton(i18n("launcher.agreement.accept"));
+//            yesButton.getStyleClass().add("dialog-accept");
+//            yesButton.setOnAction(e -> {
+//                globalConfig().setMultiplayerAgreementVersion(MultiplayerManager.HIPER_AGREEMENT_VERSION);
+//                runnable.run();
+//                agreementPane.fireEvent(new DialogCloseEvent());
+//            });
+//            JFXButton noButton = new JFXButton(i18n("launcher.agreement.decline"));
+//            noButton.getStyleClass().add("dialog-cancel");
+//            noButton.setOnAction(e -> {
+//                agreementPane.fireEvent(new DialogCloseEvent());
+//                fireEvent(new PageCloseEvent());
+//            });
+//            agreementPane.setActions(agreementLink, yesButton, noButton);
+//            Controllers.dialog(agreementPane);
+//        } else {
             runnable.run();
-        }
+//        }
     }
 
-    private void downloadHiPerIfNecessary() {
-        if (!MultiplayerManager.HIPER_PATH.toFile().exists()) {
+    private void downloadEasytierIfNecessary() {
+        if (!MultiplayerManager.EASYTIER_PATH.toFile().exists()) {
             setDisabled(true);
             Controllers.taskDialog(MultiplayerManager.downloadEasytier()
                     .whenComplete(Schedulers.javafx(), exception -> {
@@ -192,7 +188,7 @@ public class MultiplayerPage extends DecoratorAnimatedPage implements DecoratorP
                         if (exception != null) {
                             if (exception instanceof CancellationException) {
                                 Controllers.showToast(i18n("message.cancelled"));
-                            } else if (exception instanceof MultiplayerManager.HiperUnsupportedPlatformException) {
+                            } else if (exception instanceof MultiplayerManager.EasytierUnsupportedPlatformException) {
                                 Controllers.dialog(i18n("multiplayer.download.unsupported"), i18n("install.failed.downloading"), MessageDialogPane.MessageType.ERROR);
                                 fireEvent(new PageCloseEvent());
                             } else {
@@ -213,32 +209,35 @@ public class MultiplayerPage extends DecoratorAnimatedPage implements DecoratorP
         if (e instanceof CancellationException) {
             LOG.info("Connection rejected by the server");
             return i18n("message.cancelled");
-        } else if (e instanceof MultiplayerManager.HiperInvalidConfigurationException) {
-            LOG.warning("HiPer invalid configuration");
+        } else if (e instanceof MultiplayerManager.EasytierInvalidConfigurationException) {
+            LOG.warning("Easytier invalid configuration");
             return i18n("multiplayer.token.malformed");
         } else if (e instanceof ChecksumMismatchException) {
-            LOG.warning("Failed to verify HiPer files", e);
+            LOG.warning("Failed to verify Easytier files", e);
             return i18n("multiplayer.error.file_not_found");
-        } else if (e instanceof MultiplayerManager.HiperExitException) {
-            int exitCode = ((MultiplayerManager.HiperExitException) e).getExitCode();
-            LOG.warning("HiPer exited unexpectedly with exit code " + exitCode);
+        } else if (e instanceof MultiplayerManager.EasytierExitException) {
+            int exitCode = ((MultiplayerManager.EasytierExitException) e).getExitCode();
+            LOG.warning("Easytier exited unexpectedly with exit code " + exitCode);
             return i18n("multiplayer.exit", exitCode);
-        } else if (e instanceof MultiplayerManager.HiperInvalidTokenException) {
+        } else if (e instanceof MultiplayerManager.EasytierInvalidTokenException) {
             LOG.warning("invalid token");
             return i18n("multiplayer.token.invalid");
         } else {
-            LOG.warning("Unknown HiPer exception", e);
+            LOG.warning("Unknown Easytier exception", e);
             return e.getLocalizedMessage() + "\n" + StringUtils.getStackTrace(e);
         }
     }
 
     public void start() {
-        MultiplayerManager.startEasytier(globalConfig().getMultiplayerToken())
+        String networkName = "HMCL-" + UUID.randomUUID().toString();
+        String networkSecret = "HMCL-" + UUID.randomUUID().toString();
+        String serverUrl = "tcp://public.easytier.cn:11010"; // 默认服务器地址
+
+        MultiplayerManager.startEasytier(networkName, networkSecret, serverUrl, false)
                 .thenAcceptAsync(session -> {
                     this.session.set(session);
                     onExit = session.onExit().registerWeak(this::onExit);
                     onIPAllocated = session.onIPAllocated().registerWeak(this::onIPAllocated);
-                    onValidUntil = session.onValidUntil().registerWeak(this::onValidUntil);
                 }, Schedulers.javafx())
                 .exceptionally(throwable -> {
                     runInFX(() -> Controllers.dialog(localizeErrorMessage(throwable), null, MessageDialogPane.MessageType.ERROR));
@@ -280,46 +279,41 @@ public class MultiplayerPage extends DecoratorAnimatedPage implements DecoratorP
 
     private void clearSession() {
         this.session.set(null);
-        this.expireTime.set(null);
+//        this.expireTime.set(null);
         this.onExit = null;
         this.onIPAllocated = null;
-        this.onValidUntil = null;
+//        this.onValidUntil = null;
         this.broadcaster.set(null);
         this.onBroadcasterExit = null;
     }
 
-    private void onIPAllocated(MultiplayerManager.HiperIPEvent event) {
+    private void onIPAllocated(MultiplayerManager.EasytierIPEvent event) {
         runInFX(() -> this.address.set(event.getIP()));
     }
 
-    private void onValidUntil(MultiplayerManager.HiperShowValidUntilEvent event) {
-        runInFX(() -> this.expireTime.set(event.getValidUntil()));
-    }
+//    private void onValidUntil(MultiplayerManager.EasytierShowValidUntilEvent event) {
+//        runInFX(() -> this.expireTime.set(event.getValidUntil()));
+//    }
 
-    private void onExit(MultiplayerManager.HiperExitEvent event) {
+    private void onExit(MultiplayerManager.EasytierExitEvent event) {
         runInFX(() -> {
             switch (event.getExitCode()) {
                 case 0:
                     break;
-                case MultiplayerManager.HiperExitEvent.CERTIFICATE_EXPIRED:
-                    MultiplayerManager.clearConfiguration();
-                    Controllers.dialog(i18n("multiplayer.token.expired"));
-                    break;
-                case MultiplayerManager.HiperExitEvent.INVALID_CONFIGURATION:
-                    MultiplayerManager.clearConfiguration();
+                case MultiplayerManager.EasytierExitEvent.INVALID_CONFIGURATION:
                     Controllers.dialog(i18n("multiplayer.token.malformed"));
                     break;
-                case MultiplayerManager.HiperExitEvent.NO_SUDO_PRIVILEGES:
+                case MultiplayerManager.EasytierExitEvent.NO_SUDO_PRIVILEGES:
                     if (OperatingSystem.CURRENT_OS == OperatingSystem.WINDOWS) {
                         Controllers.confirm(i18n("multiplayer.error.failed_sudo.windows"), null, MessageDialogPane.MessageType.WARNING, () -> {
                             FXUtils.openLink("https://docs.hmcl.net/multiplayer/admin.html");
                         }, null);
                     } else if (OperatingSystem.CURRENT_OS == OperatingSystem.LINUX) {
-                        Controllers.dialog(i18n("multiplayer.error.failed_sudo.linux", MultiplayerManager.HIPER_PATH.toString()), null, MessageDialogPane.MessageType.WARNING);
+                        Controllers.dialog(i18n("multiplayer.error.failed_sudo.linux", MultiplayerManager.EASYTIER_PATH.toString()), null, MessageDialogPane.MessageType.WARNING);
                     } else if (OperatingSystem.CURRENT_OS == OperatingSystem.OSX) {
                         Controllers.confirm(i18n("multiplayer.error.failed_sudo.mac"), null, MessageDialogPane.MessageType.INFO, () -> {
                             try {
-                                String text = "%hmcl-hiper ALL=(ALL:ALL) NOPASSWD: " + MultiplayerManager.HIPER_PATH.toString().replaceAll("[ @!(),:=\\\\]", "\\\\$0") + "\n";
+                                String text = "%hmcl-easytier ALL=(ALL:ALL) NOPASSWD: " + MultiplayerManager.EASYTIER_PATH.toString().replaceAll("[ @!(),:=\\\\]", "\\\\$0") + "\n";
 
                                 File sudoersTmp = File.createTempFile("sudoer", ".tmp");
                                 sudoersTmp.deleteOnExit();
@@ -327,12 +321,12 @@ public class MultiplayerPage extends DecoratorAnimatedPage implements DecoratorP
 
                                 SystemUtils.callExternalProcess(
                                         "osascript", "-e", String.format("do shell script \"%s\" with administrator privileges", String.join(";",
-                                                "dscl . create /Groups/hmcl-hiper PrimaryGroupID 758",
-                                                "dscl . merge /Groups/hmcl-hiper GroupMembership " + CommandBuilder.toShellStringLiteral(System.getProperty("user.name")) + "",
+                                                "dscl . create /Groups/hmcl-easytier PrimaryGroupID 758",
+                                                "dscl . merge /Groups/hmcl-easytier GroupMembership " + CommandBuilder.toShellStringLiteral(System.getProperty("user.name")) + "",
                                                 "mkdir -p /private/etc/sudoers.d",
-                                                "mv -f " + CommandBuilder.toShellStringLiteral(sudoersTmp.toString()) + " /private/etc/sudoers.d/hmcl-hiper",
-                                                "chown root /private/etc/sudoers.d/hmcl-hiper",
-                                                "chmod 0440 /private/etc/sudoers.d/hmcl-hiper"
+                                                "mv -f " + CommandBuilder.toShellStringLiteral(sudoersTmp.toString()) + " /private/etc/sudoers.d/hmcl-easytier",
+                                                "chown root /private/etc/sudoers.d/hmcl-easytier",
+                                                "chmod 0440 /private/etc/sudoers.d/hmcl-easytier"
                                         ).replaceAll("[\\\\\"]", "\\\\$0"))
                                 );
                             } catch (Throwable e) {
@@ -341,14 +335,8 @@ public class MultiplayerPage extends DecoratorAnimatedPage implements DecoratorP
                         }, null);
                     }
                     break;
-                case MultiplayerManager.HiperExitEvent.INTERRUPTED:
+                case MultiplayerManager.EasytierExitEvent.INTERRUPTED:
                     // do nothing
-                    break;
-                case MultiplayerManager.HiperExitEvent.FAILED_GET_DEVICE:
-                    Controllers.dialog(i18n("multiplayer.error.failed_get_device"));
-                    break;
-                case MultiplayerManager.HiperExitEvent.FAILED_LOAD_CONFIG:
-                    Controllers.dialog(i18n("multiplayer.error.failed_load_config"));
                     break;
                 default:
                     Controllers.dialog(i18n("multiplayer.exit", event.getExitCode()));
@@ -362,5 +350,51 @@ public class MultiplayerPage extends DecoratorAnimatedPage implements DecoratorP
     @Override
     public ReadOnlyObjectProperty<State> stateProperty() {
         return state;
+    }
+
+    public void startRoom(int port, boolean disableP2p, String serverUrl) {
+        // 根据参数启动一个房间
+        String networkName = "HMCL-" + UUID.randomUUID();
+        String networkSecret = "HMCL-" + UUID.randomUUID();
+
+        MultiplayerManager.startEasytier(networkName, networkSecret, serverUrl, disableP2p)
+            .thenAcceptAsync(session -> {
+                this.session.set(session);
+                onExit = session.onExit().registerWeak(this::onExit);
+                onIPAllocated = session.onIPAllocated().registerWeak(this::onIPAllocated);
+                setPort(port);
+            }, Schedulers.javafx())
+            .exceptionally(throwable -> {
+                runInFX(() -> Controllers.dialog(localizeErrorMessage(throwable), null, MessageDialogPane.MessageType.ERROR));
+                return null;
+            });
+    }
+
+    public void joinRoom(String base64Code) {
+        try {
+            // 解码并解析联机码
+            String jsonStr = new String(Base64.getDecoder().decode(base64Code), StandardCharsets.UTF_8);
+            JsonObject json = new JsonParser().parse(jsonStr).getAsJsonObject();
+            
+            String networkName = json.get("network-name").getAsString();
+            String networkSecret = json.get("network-secret").getAsString();
+            String peerUrl = json.get("peers").getAsString();
+            String ip = json.get("ip").getAsString();
+
+            // 启动实例加入房间
+            MultiplayerManager.startEasytier(networkName, networkSecret, peerUrl, false)
+                .thenAcceptAsync(session -> {
+                    this.session.set(session); 
+                    onExit = session.onExit().registerWeak(this::onExit);
+                    onIPAllocated = session.onIPAllocated().registerWeak(this::onIPAllocated);
+                    setAddress(ip);
+                }, Schedulers.javafx())
+                .exceptionally(throwable -> {
+                    runInFX(() -> Controllers.dialog(localizeErrorMessage(throwable), null, MessageDialogPane.MessageType.ERROR));
+                    return null;
+                });
+        } catch (Exception e) {
+            Controllers.dialog(i18n("multiplayer.join_code.invalid"), null, MessageDialogPane.MessageType.ERROR);
+        }
     }
 }

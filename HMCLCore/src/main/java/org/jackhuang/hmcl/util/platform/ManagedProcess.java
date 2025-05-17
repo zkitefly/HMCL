@@ -36,7 +36,7 @@ import java.util.function.Predicate;
  * @see org.jackhuang.hmcl.launch.ExitWaiter
  * @see org.jackhuang.hmcl.launch.StreamPump
  */
-public final class ManagedProcess {
+public class ManagedProcess {
     private final Process process;
     private final List<String> commands;
     private final String classpath;
