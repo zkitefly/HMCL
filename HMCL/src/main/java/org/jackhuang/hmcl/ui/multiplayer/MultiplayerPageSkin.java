@@ -365,7 +365,7 @@ public class MultiplayerPageSkin extends DecoratorAnimatedPage.DecoratorAnimated
                         future.thenAcceptAsync(Lang.wrapConsumer(c -> {
                             if (c) Files.copy(file.toPath(), targetPath);
                         })).exceptionally(exception -> {
-                            LOG.log(Level.WARNING, "Failed to import license file", exception);
+                            LOG.warning("Failed to import license file", exception);
                             Platform.runLater(() -> Controllers.dialog(i18n("multiplayer.persistence.import.failed"), null, MessageType.ERROR));
                             return null;
                         });
@@ -398,7 +398,7 @@ public class MultiplayerPageSkin extends DecoratorAnimatedPage.DecoratorAnimated
                         CompletableFuture.runAsync(Lang.wrap(() -> MultiplayerManager.downloadHiperConfig(token, configPath)), Schedulers.io())
                                 .handleAsync((ignored, exception) -> {
                                     if (exception != null) {
-                                        LOG.log(Level.INFO, "Unable to download hiper config file", e);
+                                        LOG.info( "Unable to download hiper config file", e);
                                     }
 
                                     if (!Files.isRegularFile(configPath)) {
@@ -410,7 +410,7 @@ public class MultiplayerPageSkin extends DecoratorAnimatedPage.DecoratorAnimated
                                     try {
                                         Files.copy(configPath, file.toPath(), StandardCopyOption.REPLACE_EXISTING);
                                     } catch (IOException ioException) {
-                                        LOG.log(Level.WARNING, "Failed to export license file", ioException);
+                                        LOG.warning("Failed to export license file", ioException);
                                         Platform.runLater(() -> Controllers.dialog(i18n("multiplayer.persistence.export.failed"), null, MessageType.ERROR));
                                     }
 
