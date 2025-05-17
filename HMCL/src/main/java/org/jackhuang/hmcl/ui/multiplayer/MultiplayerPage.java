@@ -48,7 +48,6 @@ import java.io.File;
 import java.util.Date;
 import java.util.concurrent.CancellationException;
 import java.util.function.Consumer;
-import java.util.logging.Level;
 
 import static org.jackhuang.hmcl.setting.ConfigHolder.globalConfig;
 import static org.jackhuang.hmcl.ui.FXUtils.runInFX;

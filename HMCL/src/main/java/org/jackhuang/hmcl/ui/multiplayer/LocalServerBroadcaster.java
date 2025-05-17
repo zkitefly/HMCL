@@ -27,7 +27,6 @@ import java.io.OutputStream;
 import java.net.*;
 import java.nio.channels.UnresolvedAddressException;
 import java.nio.charset.StandardCharsets;
-import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
