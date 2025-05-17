@@ -186,7 +186,7 @@ public class MultiplayerPage extends DecoratorAnimatedPage implements DecoratorP
     private void downloadHiPerIfNecessary() {
         if (!MultiplayerManager.HIPER_PATH.toFile().exists()) {
             setDisabled(true);
-            Controllers.taskDialog(MultiplayerManager.downloadHiper()
+            Controllers.taskDialog(MultiplayerManager.downloadEasytier()
                     .whenComplete(Schedulers.javafx(), exception -> {
                         setDisabled(false);
                         if (exception != null) {
@@ -233,7 +233,7 @@ public class MultiplayerPage extends DecoratorAnimatedPage implements DecoratorP
     }
 
     public void start() {
-        MultiplayerManager.startHiper(globalConfig().getMultiplayerToken())
+        MultiplayerManager.startEasytier(globalConfig().getMultiplayerToken())
                 .thenAcceptAsync(session -> {
                     this.session.set(session);
                     onExit = session.onExit().registerWeak(this::onExit);
