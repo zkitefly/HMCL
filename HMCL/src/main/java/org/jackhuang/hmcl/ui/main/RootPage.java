@@ -201,6 +201,7 @@ public class RootPage extends DecoratorAnimatedPage implements DecoratorPage {
                     .startCategory(i18n("settings.launcher.general").toUpperCase(Locale.ROOT))
                     .add(launcherSettingsItem)
                     .add(chatItem)
+                    .add(multiplayerItem)
                     ;
 
             // the root page, with the sidebar in left, navigator in center.

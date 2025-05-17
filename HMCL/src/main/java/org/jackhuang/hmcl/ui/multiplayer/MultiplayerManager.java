@@ -58,7 +58,7 @@ import static org.jackhuang.hmcl.util.logging.Logger.LOG;
  */
 public final class MultiplayerManager {
     static final String EASYTIER_VERSION = "v2.2.4";
-    private static final String DOWNLOAD_URL = "https://raw.gitcode.com/zkitefly/easytier-release/raw/2f70217b9418e05779caf187e42c5a6786355195/";
+    private static final String DOWNLOAD_URL = "https://raw.gitcode.com/zkitefly/easytier-release/raw/main/";
     public static final Path EASYTIER_PATH = getEasytierLocalDirectory().resolve(getEasutierFileName());
     public static final int EASYTIER_AGREEMENT_VERSION = 1;
     private static final String REMOTE_ADDRESS = "127.0.0.1";
@@ -89,7 +89,7 @@ public final class MultiplayerManager {
     private static final String GSUDO_VERSION = "v2.6.0";
     private static final String GSUDO_TARGET_ARCH = Architecture.SYSTEM_ARCH == Architecture.X86_64 ? "x64" : (Architecture.SYSTEM_ARCH == Architecture.ARM64 ? "arm64" : "x86");
     private static final String GSUDO_FILE_NAME = "gsudo.exe";
-    private static final String GSUDO_DOWNLOAD_URL = "https://raw.gitcode.com/zkitefly/gsudo-release/raw/cd81dfd753bdbcb945ce392aaf620fa5112dce51/" + GSUDO_VERSION + "/" + GSUDO_TARGET_ARCH + "/" + GSUDO_FILE_NAME;
+    private static final String GSUDO_DOWNLOAD_URL = "https://raw.gitcode.com/zkitefly/gsudo-release/raw/main/" + GSUDO_VERSION + "/" + GSUDO_TARGET_ARCH + "/" + GSUDO_FILE_NAME;
     private static final Path GSUDO_LOCAL_FILE = Metadata.HMCL_CURRENT_DIRECTORY.resolve("libraries").resolve("gsudo").resolve("gsudo").resolve(GSUDO_VERSION).resolve(GSUDO_TARGET_ARCH).resolve(GSUDO_FILE_NAME);
     private static final boolean USE_GSUDO;
 
@@ -212,7 +212,7 @@ public final class MultiplayerManager {
         }).thenApplyAsync(wrap(ignored -> {
             List<String> commandList = new ArrayList<>();
 
-            String baseCommand = String.format("--use-smoltcp --multi-thread --dhcp --dev-name \"HMCL-Easytier\" --network-name \"%s\" --network-secret \"%s\" --peers \"%s\"",
+            String baseCommand = String.format("--use-smoltcp --multi-thread --dhcp --dev-name HMCL-Easytier --network-name %s --network-secret %s --peers %s",
                     network_name, network_secret, server_url);
 
             if (no_p2p) {
@@ -299,7 +299,7 @@ public final class MultiplayerManager {
                     error = EasytierExitEvent.INVALID_CONFIGURATION;
                 else if (log.startsWith("sudo: ") || log.startsWith("Error getting authority") || log.startsWith("Error: An error occurred trying to start process"))
                     error = EasytierExitEvent.NO_SUDO_PRIVILEGES;
-                else if (log.contains("connecting to peer. dst:")) {
+                else if (log.contains("connecting to peer. dst:") || log.contains("error: failed to parse peer uri:")) {
                     error = EasytierExitEvent.FAILED_SERVER_URL;
                     stop();
                 }
