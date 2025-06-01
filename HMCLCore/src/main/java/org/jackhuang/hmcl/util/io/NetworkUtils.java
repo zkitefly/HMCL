@@ -21,8 +21,18 @@ import org.jackhuang.hmcl.util.Pair;
 
 import java.io.*;
 import java.net.*;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.time.Duration;
 import java.util.*;
 import java.util.Map.Entry;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.jackhuang.hmcl.util.Pair.pair;
@@ -35,6 +45,11 @@ public final class NetworkUtils {
     public static final String PARAMETER_SEPARATOR = "&";
     public static final String NAME_VALUE_SEPARATOR = "=";
     private static final int TIME_OUT = 8000;
+    private static final HttpClient HTTP_CLIENT = HttpClient.newBuilder()
+            .connectTimeout(Duration.ofMillis(TIME_OUT))
+            .followRedirects(HttpClient.Redirect.NORMAL)
+            .executor(Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors()))
+            .build();
 
     private NetworkUtils() {
     }
@@ -92,10 +107,6 @@ public final class NetworkUtils {
         connection.setReadTimeout(TIME_OUT);
         connection.setRequestProperty("Accept-Language", Locale.getDefault().toLanguageTag());
         return connection;
-    }
-
-    public static HttpURLConnection createHttpConnection(URL url) throws IOException {
-        return (HttpURLConnection) createConnection(url);
     }
 
     /**
@@ -179,23 +190,45 @@ public final class NetworkUtils {
     }
 
     public static String doGet(URL url) throws IOException {
-        HttpURLConnection con = createHttpConnection(url);
-        con = resolveConnection(con);
-        return IOUtils.readFullyAsString(con.getInputStream());
+        try {
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(url.toURI())
+                    .timeout(Duration.ofMillis(TIME_OUT))
+                    .GET()
+                    .build();
+            
+            HttpResponse<String> response = HTTP_CLIENT.send(request,
+                    HttpResponse.BodyHandlers.ofString());
+            
+            return response.body();
+        } catch (InterruptedException | URISyntaxException e) {
+            throw new IOException(e);
+        }
     }
 
     public static String doGet(List<URL> urls) throws IOException {
         List<IOException> exceptions = null;
         for (URL url : urls) {
             try {
-                HttpURLConnection con = createHttpConnection(url);
-                con = resolveConnection(con);
-                return IOUtils.readFullyAsString(con.getInputStream());
-            } catch (IOException e) {
+                HttpRequest request = HttpRequest.newBuilder()
+                        .uri(url.toURI())
+                        .timeout(Duration.ofMillis(TIME_OUT))
+                        .GET()
+                        .build();
+                
+                HttpResponse<String> response = HTTP_CLIENT.send(request,
+                        HttpResponse.BodyHandlers.ofString());
+                
+                if (response.statusCode() / 100 != 2) {
+                    throw new IOException("HTTP " + response.statusCode());
+                }
+                
+                return response.body();
+            } catch (IOException | URISyntaxException | InterruptedException e) {
                 if (exceptions == null) {
                     exceptions = new ArrayList<>(1);
                 }
-                exceptions.add(e);
+                exceptions.add(new IOException(e));
             }
         }
 
@@ -227,51 +260,52 @@ public final class NetworkUtils {
     }
 
     public static String doPost(URL url, String post, String contentType) throws IOException {
-        byte[] bytes = post.getBytes(UTF_8);
-
-        HttpURLConnection con = createHttpConnection(url);
-        con.setRequestMethod("POST");
-        con.setDoOutput(true);
-        con.setRequestProperty("Content-Type", contentType + "; charset=utf-8");
-        con.setRequestProperty("Content-Length", "" + bytes.length);
-        try (OutputStream os = con.getOutputStream()) {
-            os.write(bytes);
-        }
-        return readData(con);
-    }
-
-    public static String readData(HttpURLConnection con) throws IOException {
         try {
-            try (InputStream stdout = con.getInputStream()) {
-                return IOUtils.readFullyAsString("gzip".equals(con.getContentEncoding()) ? IOUtils.wrapFromGZip(stdout) : stdout);
-            }
-        } catch (IOException e) {
-            try (InputStream stderr = con.getErrorStream()) {
-                if (stderr == null)
-                    throw e;
-                return IOUtils.readFullyAsString("gzip".equals(con.getContentEncoding()) ? IOUtils.wrapFromGZip(stderr) : stderr);
-            }
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(url.toURI())
+                    .timeout(Duration.ofMillis(TIME_OUT))
+                    .header("Content-Type", contentType + "; charset=utf-8")
+                    .POST(HttpRequest.BodyPublishers.ofString(post, UTF_8))
+                    .build();
+                    
+            HttpResponse<String> response = HTTP_CLIENT.send(request,
+                    HttpResponse.BodyHandlers.ofString());
+                    
+            return response.body();
+        } catch (InterruptedException | URISyntaxException e) {
+            throw new IOException(e);
         }
     }
 
     public static String detectFileName(URL url) throws IOException {
-        HttpURLConnection conn = resolveConnection(createHttpConnection(url));
-        int code = conn.getResponseCode();
-        if (code / 100 == 4)
-            throw new FileNotFoundException();
-        if (code / 100 != 2)
-            throw new IOException(url + ": response code " + conn.getResponseCode());
+        try {
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(url.toURI())
+                    .timeout(Duration.ofMillis(TIME_OUT))
+                    .GET()
+                    .build();
+                    
+            HttpResponse<Void> response = HTTP_CLIENT.send(request,
+                    HttpResponse.BodyHandlers.discarding());
+                    
+            int code = response.statusCode();
+            if (code / 100 == 4)
+                throw new FileNotFoundException();
+            if (code / 100 != 2)
+                throw new IOException(url + ": response code " + code);
 
-        return detectFileName(conn);
-    }
-
-    public static String detectFileName(HttpURLConnection conn) {
-        String disposition = conn.getHeaderField("Content-Disposition");
-        if (disposition == null || !disposition.contains("filename=")) {
-            String u = conn.getURL().toString();
-            return decodeURL(substringAfterLast(u, '/'));
-        } else {
-            return decodeURL(removeSurrounding(substringAfter(disposition, "filename="), "\""));
+            Optional<String> disposition = response.headers()
+                    .firstValue("Content-Disposition");
+                    
+            if (disposition.isEmpty() || !disposition.get().contains("filename=")) {
+                String u = url.toString();
+                return decodeURL(substringAfterLast(u, '/'));
+            } else {
+                return decodeURL(removeSurrounding(
+                    substringAfter(disposition.get(), "filename="), "\""));
+            }
+        } catch (InterruptedException | URISyntaxException e) {
+            throw new IOException(e);
         }
     }
 
@@ -293,11 +327,20 @@ public final class NetworkUtils {
     }
 
     public static boolean urlExists(URL url) throws IOException {
-        HttpURLConnection con = createHttpConnection(url);
-        con = resolveConnection(con);
-        int responseCode = con.getResponseCode();
-        con.disconnect();
-        return responseCode / 100 == 2;
+        try {
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(url.toURI()) 
+                    .timeout(Duration.ofMillis(TIME_OUT))
+                    .method("HEAD", HttpRequest.BodyPublishers.noBody())
+                    .build();
+                    
+            HttpResponse<Void> response = HTTP_CLIENT.send(request,
+                    HttpResponse.BodyHandlers.discarding());
+                    
+            return response.statusCode() / 100 == 2;
+        } catch (InterruptedException | URISyntaxException e) {
+            throw new IOException(e);
+        }
     }
 
     // ==== Shortcut methods for encoding/decoding URLs in UTF-8 ====
@@ -317,4 +360,67 @@ public final class NetworkUtils {
         }
     }
     // ====
+    
+    // 保留这些方法以保持兼容性
+    public static String readData(HttpURLConnection con) throws IOException {
+        // 为保持兼容性转换为 HttpClient 调用
+        try {
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(con.getURL().toURI())
+                    .timeout(Duration.ofMillis(TIME_OUT))
+                    .method(con.getRequestMethod(), 
+                           con.getDoOutput() ? HttpRequest.BodyPublishers.noBody() 
+                                           : HttpRequest.BodyPublishers.noBody())
+                    .build();
+            
+            HttpResponse<String> response = HTTP_CLIENT.send(request,
+                    HttpResponse.BodyHandlers.ofString());
+            
+            return response.body();
+        } catch (URISyntaxException | InterruptedException e) {
+            throw new IOException(e);
+        }
+    }
+
+    public static HttpURLConnection createHttpConnection(URL url) throws IOException {
+        return (HttpURLConnection) createConnection(url);
+    }
+
+    // 新增下载专用的连接池配置
+    private static final HttpClient DOWNLOAD_CLIENT = HttpClient.newBuilder()
+            .connectTimeout(Duration.ofMillis(TIME_OUT))
+            .followRedirects(HttpClient.Redirect.NORMAL)
+            .executor(Executors.newFixedThreadPool(
+                Math.max(Runtime.getRuntime().availableProcessors() * 2, 8)))
+            .build();
+
+    // 新增用于下载的工具方法
+    public static CompletableFuture<Path> downloadAsync(URL url, Path target) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                HttpURLConnection conn = createHttpConnection(url);
+                conn = resolveConnection(conn);
+                
+                if (conn.getResponseCode() / 100 != 2) {
+                    throw new IOException("HTTP " + conn.getResponseCode());
+                }
+
+                try (InputStream is = conn.getInputStream()) {
+                    Files.copy(is, target, StandardCopyOption.REPLACE_EXISTING);
+                }
+                
+                return target;
+            } catch (Exception e) {
+                throw new RuntimeException(e); // 替换 CompletionException 为 RuntimeException
+            }
+        });
+    }
+
+    // 用于批量下载的工具方法
+    public static List<CompletableFuture<Path>> downloadAllAsync(
+            List<Pair<URL, Path>> downloads) {
+        return downloads.stream()
+                .map(pair -> downloadAsync(pair.getKey(), pair.getValue()))
+                .collect(Collectors.toList());
+    }
 }

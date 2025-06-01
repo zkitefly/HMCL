@@ -29,7 +29,12 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest.Builder;
+import java.net.http.HttpResponse;
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -51,6 +56,10 @@ public abstract class HttpRequest {
     protected final Set<Integer> toleratedHttpCodes = new HashSet<>();
     protected int retryTimes = 1;
     protected boolean ignoreHttpCode;
+    
+    protected static final HttpClient HTTP_CLIENT = HttpClient.newBuilder()
+            .connectTimeout(Duration.ofMillis(8000))
+            .build();
 
     private HttpRequest(String url, String method) {
         this.url = url;
@@ -124,12 +133,21 @@ public abstract class HttpRequest {
     }
 
     public HttpURLConnection createConnection() throws IOException {
-        HttpURLConnection con = createHttpConnection(new URL(url));
+        HttpURLConnection con = NetworkUtils.createHttpConnection(new URL(url));
         con.setRequestMethod(method);
         for (Map.Entry<String, String> entry : headers.entrySet()) {
             con.setRequestProperty(entry.getKey(), entry.getValue());
         }
         return con;
+    }
+    
+    protected java.net.http.HttpRequest.Builder createRequestBuilder() {
+        Builder builder = java.net.http.HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .timeout(Duration.ofMillis(8000));
+                
+        headers.forEach(builder::header);
+        return builder;
     }
 
     public static class HttpGetRequest extends HttpRequest {
@@ -139,9 +157,24 @@ public abstract class HttpRequest {
 
         public String getString() throws IOException {
             return getStringWithRetry(() -> {
-                HttpURLConnection con = createConnection();
-                con = resolveConnection(con);
-                return IOUtils.readFullyAsString("gzip".equals(con.getContentEncoding()) ? IOUtils.wrapFromGZip(con.getInputStream()) : con.getInputStream());
+                try {
+                    Builder builder = createRequestBuilder();
+                    java.net.http.HttpRequest request = builder.GET().build();
+                    
+                    HttpResponse<String> response = HTTP_CLIENT.send(request, 
+                        HttpResponse.BodyHandlers.ofString());
+                    
+                    int code = response.statusCode();
+                    if (responseCodeTester != null) {
+                        responseCodeTester.accept(new URL(url), code);
+                    } else if (code / 100 != 2 && !ignoreHttpCode && !toleratedHttpCodes.contains(code)) {
+                        throw new ResponseCodeException(new URL(url), code, response.body());
+                    }
+                    
+                    return response.body();
+                } catch (InterruptedException e) {
+                    throw new IOException(e);
+                }
             }, retryTimes);
         }
     }
@@ -180,30 +213,26 @@ public abstract class HttpRequest {
 
         public String getString() throws IOException {
             return getStringWithRetry(() -> {
-                HttpURLConnection con = createConnection();
-                con.setDoOutput(true);
-
-                try (OutputStream os = con.getOutputStream()) {
-                    os.write(bytes);
-                }
-
-                URL url = new URL(this.url);
-
-                if (responseCodeTester != null) {
-                    responseCodeTester.accept(url, con.getResponseCode());
-                } else {
-                    if (con.getResponseCode() / 100 != 2) {
-                        if (!ignoreHttpCode && !toleratedHttpCodes.contains(con.getResponseCode())) {
-                            try {
-                                throw new ResponseCodeException(url, con.getResponseCode(), NetworkUtils.readData(con));
-                            } catch (IOException e) {
-                                throw new ResponseCodeException(url, con.getResponseCode(), e);
-                            }
-                        }
+                try {
+                    Builder builder = createRequestBuilder();
+                    java.net.http.HttpRequest request = builder
+                            .POST(java.net.http.HttpRequest.BodyPublishers.ofByteArray(bytes))
+                            .build();
+                            
+                    HttpResponse<String> response = HTTP_CLIENT.send(request,
+                            HttpResponse.BodyHandlers.ofString());
+                            
+                    int code = response.statusCode();
+                    if (responseCodeTester != null) {
+                        responseCodeTester.accept(new URL(url), code); 
+                    } else if (code / 100 != 2 && !ignoreHttpCode && !toleratedHttpCodes.contains(code)) {
+                        throw new ResponseCodeException(new URL(url), code, response.body());
                     }
+                    
+                    return response.body();
+                } catch (InterruptedException e) {
+                    throw new IOException(e);
                 }
-
-                return NetworkUtils.readData(con);
             }, retryTimes);
         }
     }
