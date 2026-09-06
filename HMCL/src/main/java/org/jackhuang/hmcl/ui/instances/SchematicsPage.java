@@ -41,6 +41,7 @@ import org.jackhuang.hmcl.task.Schedulers;
 import org.jackhuang.hmcl.task.Task;
 import org.jackhuang.hmcl.ui.*;
 import org.jackhuang.hmcl.ui.construct.*;
+import org.jackhuang.hmcl.ui.schematic.SchematicPreviewWindow;
 import org.jackhuang.hmcl.util.FileNameSet;
 import org.jackhuang.hmcl.util.Lang;
 import org.jackhuang.hmcl.util.StringUtils;
@@ -78,6 +79,9 @@ public final class SchematicsPage extends ListPageBase<SchematicsPage.Item> {
     private Path schematicsDirectory;
     private DirItem currentDirectory;
 
+    /// The client jar of the currently loaded instance, used to texture the schematic preview.
+    private @Nullable Path versionJar;
+
     /// Creates a schematics list that reloads when `instanceContext` changes.
     ///
     /// @param instanceContext the parent page's instance property
@@ -103,6 +107,7 @@ public final class SchematicsPage extends ListPageBase<SchematicsPage.Item> {
     public void loadInstance(HMCLGameInstance.Optional instance) {
         HMCLGameInstance gameInstance = instance.instance();
         this.schematicsDirectory = gameInstance != null ? gameInstance.getSchematicsDirectory() : null;
+        this.versionJar = gameInstance != null ? gameInstance.getInstanceJarFile() : null;
 
         refresh();
     }
@@ -557,7 +562,7 @@ public final class SchematicsPage extends ListPageBase<SchematicsPage.Item> {
         }
     }
 
-    private static final class Cell extends ListCell<Item> {
+    private final class Cell extends ListCell<Item> {
 
         private final RipplerContainer graphics;
         private final BorderPane root;
@@ -595,6 +600,15 @@ public final class SchematicsPage extends ListPageBase<SchematicsPage.Item> {
                 this.right = new HBox(8);
                 right.setAlignment(Pos.CENTER_RIGHT);
 
+                JFXButton btnPreview = FXUtils.newToggleButton4(SVG.VISIBILITY);
+                FXUtils.installFastTooltip(btnPreview, i18n("schematics.preview"));
+                btnPreview.setOnAction(event -> {
+                    Item item = getItem();
+                    if (item instanceof LitematicFileItem fileItem) {
+                        new SchematicPreviewWindow(fileItem.getPath(), versionJar).show();
+                    }
+                });
+
                 JFXButton btnReveal = FXUtils.newToggleButton4(SVG.FOLDER_OPEN);
                 FXUtils.installFastTooltip(btnReveal, i18n("reveal.in_file_manager"));
                 btnReveal.setOnAction(event -> {
@@ -612,7 +626,7 @@ public final class SchematicsPage extends ListPageBase<SchematicsPage.Item> {
                     }
                 });
 
-                right.getChildren().setAll(btnReveal, btnDelete);
+                right.getChildren().setAll(btnPreview, btnReveal, btnDelete);
             }
 
             this.graphics = new RipplerContainer(root);
