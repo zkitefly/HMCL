@@ -44,13 +44,14 @@ public final class ChunkBaseApp {
 
     private static final @NotNull @Unmodifiable Map<String, @Unmodifiable List<String>> GAME_VERSIONS = loadGameVersions();
 
-    public static final String @NotNull @Unmodifiable [] SEED_MAP_GAME_VERSIONS = getGameVersions("seed_map");
+    public static final String @NotNull @Unmodifiable [] SEED_MAP_GAME_VERSIONS = getGameVersions("seed-map");
 
-    public static final String @NotNull @Unmodifiable [] STRONGHOLD_FINDER_GAME_VERSIONS = getGameVersions("stronghold_finder");
+    public static final String @NotNull @Unmodifiable [] STRONGHOLD_FINDER_GAME_VERSIONS = getGameVersions("stronghold-finder");
 
-    public static final String @NotNull @Unmodifiable [] NETHER_FORTRESS_GAME_VERSIONS = getGameVersions("nether_fortress");
+    public static final String @NotNull @Unmodifiable [] NETHER_FORTRESS_GAME_VERSIONS = getGameVersions("nether-fortress");
 
-    public static final String @NotNull @Unmodifiable [] END_CITY_GAME_VERSIONS = getGameVersions("end_city");
+    public static final String @NotNull @Unmodifiable [] END_CITY_GAME_VERSIONS = getGameVersions("end-city");
+
 
     public static boolean isSupported(@NotNull World world) {
         return world.getSeed() != null && world.getGameVersion() != null &&
